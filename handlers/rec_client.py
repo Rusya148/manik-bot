@@ -41,7 +41,7 @@ async def process_request_for_data(message: types.Message, state):
     formatted_date = f"{year}-{month}-{day}"
 
     await state.update_data(day_rec=formatted_date)
-    await message.answer('Введите предоплату (число, например 0 или 1000.50): ', reply_markup=kb_back_inline)
+    await message.answer('Введите предоплату: ', reply_markup=kb_back_inline)
     await Form.waiting_for_prepayment.set()
 
 async def process_prepayment(message: types.Message, state):
