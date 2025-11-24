@@ -24,9 +24,17 @@ async def back_to_previous_state(callback_query: types.CallbackQuery, state):
             await callback_query.message.edit_text("Введите имя клиента", reply_markup=kb_back_inline)
             await Form.waiting_for_name.set()
 
-        elif current_state == Form.waiting_for_date.state:
-            await callback_query.message.edit_text("Введите ссылку/id на клиента.", reply_markup=kb_back_inline)
+        elif current_state == Form.waiting_for_time.state:
+            await callback_query.message.edit_text("Введите ссылку/id на клиента: ", reply_markup=kb_back_inline)
             await Form.waiting_for_link.set()
+
+        elif current_state == Form.waiting_for_date.state:
+            await callback_query.message.edit_text("Введите время, на которое записан клиент: ", reply_markup=kb_back_inline)
+            await Form.waiting_for_time.set()
+
+        elif current_state == Form.waiting_for_prepayment.state:
+            await callback_query.message.edit_text("Введите дату записи клиента (формат: DD.MM.YYYY): ", reply_markup=kb_back_inline)
+            await Form.waiting_for_date.set()
 
     await callback_query.answer()
 
