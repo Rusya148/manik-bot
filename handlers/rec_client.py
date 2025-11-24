@@ -37,16 +37,31 @@ async def process_request_for_data(message: types.Message, state):
         await message.answer("Неверный формат даты. Пожалуйста, введите дату в формате DD.MM.YYYY.", reply_markup=kb_back_inline)
         return
 
+    day, month, year = client_date.split('.')
+    formatted_date = f"{year}-{month}-{day}"
+
+    await state.update_data(day_rec=formatted_date)
+    await message.answer('Введите предоплату (число, например 0 или 1000.50): ', reply_markup=kb_back_inline)
+    await Form.waiting_for_prepayment.set()
+
+async def process_prepayment(message: types.Message, state):
+    text = message.text.strip().replace(' ', '').replace(',', '.')
+    try:
+        prepayment = float(text)
+        if prepayment < 0:
+            raise ValueError("negative")
+    except Exception:
+        await message.answer("Введите корректную сумму предоплаты (неотрицательное число).", reply_markup=kb_back_inline)
+        return
+
     user_data = await state.get_data()
     client_name = user_data['name']
     client_link = user_data['link']
     client_time = user_data['time']
-
-    day, month, year = client_date.split('.')
-    formatted_date = f"{year}-{month}-{day}"
+    client_date = user_data['day_rec']
 
     try:
-        save_client(client_name, client_link, client_time, formatted_date)
+        save_client(client_name, client_link, client_time, client_date, prepayment)
         await message.answer('Клиент успешно записан!')
     except Exception as e:
         await message.answer(f"Произошла ошибка при записи клиента: {e}")
@@ -59,3 +74,4 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(process_link, state=Form.waiting_for_link)
     dp.register_message_handler(process_time, state=Form.waiting_for_time)
     dp.register_message_handler(process_request_for_data, state=Form.waiting_for_date)
+    dp.register_message_handler(process_prepayment, state=Form.waiting_for_prepayment)

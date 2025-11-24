@@ -15,11 +15,26 @@ def create_clients_table():
         name TEXT,
         link TEXT,
         time TEXT,
-        day_rec TEXT
+        day_rec TEXT,
+        prepayment REAL DEFAULT 0
     )
     ''')
     connection.commit()
     connection.close()
+
+
+# Миграция: добавить колонку prepayment, если её нет
+def migrate_clients_add_prepayment():
+    try:
+        with sqlite3.connect('database_client.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute("PRAGMA table_info(clients)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if 'prepayment' not in columns:
+                cursor.execute("ALTER TABLE clients ADD COLUMN prepayment REAL DEFAULT 0")
+                connection.commit()
+    except sqlite3.Error as e:
+        print(f"Ошибка миграции (добавление prepayment): {e}")
 
 # Функция для создания таблицы зарплат
 def create_salary_table():
@@ -50,13 +65,13 @@ def create_expenses_table():
     connection.close()
 
 # Функция для сохранения клиента
-def save_client(name, link, time, day_rec):
-    print(f"Saving client with: {name}, {link}, {time}, {day_rec}")
+def save_client(name, link, time, day_rec, prepayment):
+    print(f"Saving client with: {name}, {link}, {time}, {day_rec}, prepayment={prepayment}")
     try:
         with sqlite3.connect('database_client.db') as connection:
             cursor = connection.cursor()
-            cursor.execute('INSERT INTO clients(name, link, time, day_rec) VALUES (?, ?, ?, ?)',
-                           (name, link, time, day_rec))
+            cursor.execute('INSERT INTO clients(name, link, time, day_rec, prepayment) VALUES (?, ?, ?, ?, ?)',
+                           (name, link, time, day_rec, prepayment))
             connection.commit()
             print(f"Client {name} saved successfully.")
     except sqlite3.OperationalError as e:
@@ -142,5 +157,6 @@ def remove_last_expenses_from_db(month_year):
 
 # Создание всех необходимых таблиц (если не существует)
 create_clients_table()
+migrate_clients_add_prepayment()
 create_salary_table()
 create_expenses_table()

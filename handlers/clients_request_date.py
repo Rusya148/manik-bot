@@ -9,6 +9,31 @@ from keyboards.keyboards import kb_registered_client
 async def clients_date(message: types.Message):
     await message.answer('На какой период показать записи?', reply_markup=kb_registered_client)
 
+def _parse_time_to_minutes(value: str) -> int:
+    """
+    Преобразует строку времени в минуты от полуночи для сортировки.
+    Поддерживает форматы: 'HH:MM', 'HH.MM', 'HH-MM', 'HH'.
+    Некорректные значения отправляются в конец списка.
+    """
+    try:
+        if not value:
+            return 24 * 60 + 1
+        cleaned = value.strip().replace(' ', '')
+        for sep in ['.', '-', '/']:
+            cleaned = cleaned.replace(sep, ':')
+        if ':' in cleaned:
+            parts = cleaned.split(':')
+            hour = int(parts[0])
+            minute = int(parts[1]) if len(parts) > 1 and parts[1] != '' else 0
+        else:
+            hour = int(cleaned)
+            minute = 0
+        if hour < 0 or hour > 23 or minute < 0 or minute > 59:
+            return 24 * 60 + 1
+        return hour * 60 + minute
+    except Exception:
+        return 24 * 60 + 1
+
 async def format_clients_message(clients):
     if not clients:
         return "Нет клиентов на выбранный период."
@@ -23,12 +48,18 @@ async def format_clients_message(clients):
     message = ""
     for date, clients in clients_by_day.items():
         message += f"——————————————\n<b>Дата: {date}</b>\n"
-        for client in clients:
+        # Сортируем клиентов внутри дня по времени (по возрастанию)
+        clients_sorted = sorted(clients, key=lambda c: _parse_time_to_minutes(c[3]))
+        for client in clients_sorted:
             name = client[1]
             username = client[2]
             appointment_time = client[3]
             appointment_date = client[4]
-            message += f"{name}, {username},\nВремя записи: {appointment_time}\n\n"
+            prepayment = 0
+            if len(client) > 5 and client[5] is not None:
+                prepayment = client[5]
+            prepayment_str = f"{prepayment:.2f}".rstrip('0').rstrip('.')
+            message += f"{name}, {username},\nВремя записи: {appointment_time}\nПредоплата: {prepayment_str}\n\n"
     return message
 
 async def client_today(callback_query: CallbackQuery):
