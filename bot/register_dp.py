@@ -6,6 +6,7 @@ from handlers.delete_client import register_delete_client as register_delete
 from handlers.salary import register_salary
 from handlers.expenses import register_expenses
 from handlers.calendar import register_calendar
+from handlers.schedule import register_schedule
 
 def register(dp):
     register_start_handlers(dp)
@@ -16,3 +17,4 @@ def register(dp):
     register_salary(dp)
     register_expenses(dp)
     register_calendar(dp)
+    register_schedule(dp)
