@@ -5,6 +5,7 @@ from handlers.clients_request_date import register_handlers as register_request_
 from handlers.delete_client import register_delete_client as register_delete
 from handlers.salary import register_salary
 from handlers.expenses import register_expenses
+from handlers.calendar import register_calendar
 
 def register(dp):
     register_start_handlers(dp)
@@ -14,3 +15,4 @@ def register(dp):
     register_delete(dp)
     register_salary(dp)
     register_expenses(dp)
+    register_calendar(dp)
