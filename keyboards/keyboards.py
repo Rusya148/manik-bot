@@ -1,4 +1,6 @@
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
+import calendar
+from datetime import date
 
 kb_start = ReplyKeyboardMarkup(
     [
@@ -6,7 +8,8 @@ kb_start = ReplyKeyboardMarkup(
          KeyboardButton(text='Удалить клиента'),
          KeyboardButton(text='Клиенты')],
         [KeyboardButton(text='Зарплата'),
-         KeyboardButton(text='Траты')]
+         KeyboardButton(text='Траты')],
+        [KeyboardButton(text='Календарь')]
     ], resize_keyboard=True
 )
 
@@ -69,4 +72,45 @@ kb_registered_client = InlineKeyboardMarkup(inline_keyboard=[
 kb_exit_delete = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Закрыть', callback_data='exit_delete')]
 ])
+
+months_ru = [
+    "Январь", "Февраль", "Март", "Апрель", "Май", "Июнь",
+    "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
+]
+
+def get_calendar_keyboard(year: int, month: int, marked_days=None) -> InlineKeyboardMarkup:
+    if marked_days is None:
+        marked_days = set()
+    cal = InlineKeyboardMarkup(row_width=7)
+
+    # Header with month and navigation
+    month_name = months_ru[month - 1]
+    header = InlineKeyboardButton(text=f"{month_name} {year}", callback_data="cal_nop")
+    prev_cb = InlineKeyboardButton(text="‹", callback_data=f"cal_prev_{year}_{month}")
+    next_cb = InlineKeyboardButton(text="›", callback_data=f"cal_next_{year}_{month}")
+    # Place header across three buttons: prev | title | next
+    cal.row(prev_cb, header, next_cb)
+
+    # Weekdays row (Mon..Sun)
+    for wd in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]:
+        cal.insert(InlineKeyboardButton(text=wd, callback_data="cal_nop"))
+
+    # Month days
+    month_calendar = calendar.Calendar(firstweekday=0).monthdayscalendar(year, month)
+    for week in month_calendar:
+        buttons = []
+        for day_num in week:
+            if day_num == 0:
+                buttons.append(InlineKeyboardButton(text=" ", callback_data="cal_nop"))
+            else:
+                day_str = f"{day_num:02d}"
+                ymd = f"{year}-{month:02d}-{day_str}"
+                marker = "•" if day_num in marked_days else ""
+                buttons.append(InlineKeyboardButton(text=f"{day_num}{marker}", callback_data=f"cal_day_{ymd}"))
+        cal.row(*buttons)
+
+    # Today shortcut
+    today = date.today()
+    cal.row(InlineKeyboardButton(text="Сегодня", callback_data=f"cal_today_{today.year}_{today.month}"))
+    return cal
 
