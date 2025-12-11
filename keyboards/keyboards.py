@@ -9,7 +9,8 @@ kb_start = ReplyKeyboardMarkup(
          KeyboardButton(text='Клиенты')],
         [KeyboardButton(text='Зарплата'),
          KeyboardButton(text='Траты')],
-        [KeyboardButton(text='Календарь')]
+        [KeyboardButton(text='Календарь'),
+         KeyboardButton(text='Расписание')]
     ], resize_keyboard=True
 )
 
@@ -113,5 +114,39 @@ def get_calendar_keyboard(year: int, month: int, marked_days=None) -> InlineKeyb
     # Today shortcut
     today = date.today()
     cal.row(InlineKeyboardButton(text="Сегодня", callback_data=f"cal_today_{today.year}_{today.month}"))
+    return cal
+
+def get_schedule_calendar_keyboard(year: int, month: int, marked_days=None, selected_days=None) -> InlineKeyboardMarkup:
+    if marked_days is None:
+        marked_days = set()
+    if selected_days is None:
+        selected_days = set()
+    cal = InlineKeyboardMarkup(row_width=7)
+
+    month_name = months_ru[month - 1]
+    header = InlineKeyboardButton(text=f"{month_name} {year}", callback_data="sch_nop")
+    prev_cb = InlineKeyboardButton(text="‹", callback_data=f"sch_prev_{year}_{month}")
+    next_cb = InlineKeyboardButton(text="›", callback_data=f"sch_next_{year}_{month}")
+    cal.row(prev_cb, header, next_cb)
+
+    wd_buttons = [InlineKeyboardButton(text=wd, callback_data="sch_nop")
+                  for wd in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]]
+    cal.row(*wd_buttons)
+
+    month_calendar = calendar.Calendar(firstweekday=0).monthdayscalendar(year, month)
+    for week in month_calendar:
+        buttons = []
+        for day_num in week:
+            if day_num == 0:
+                buttons.append(InlineKeyboardButton(text=" ", callback_data="sch_nop"))
+            else:
+                marker = "•" if day_num in marked_days else ""
+                checked = "✓" if day_num in selected_days else ""
+                label = f"{day_num}{marker}{checked}"
+                buttons.append(InlineKeyboardButton(text=label, callback_data=f"sch_day_{year}-{month:02d}-{day_num:02d}"))
+        cal.row(*buttons)
+
+    cal.row(InlineKeyboardButton(text="Сгенерировать расписание", callback_data=f"sch_generate_{year}_{month}"))
+    cal.row(InlineKeyboardButton(text="Выйти", callback_data="sch_exit"))
     return cal
 

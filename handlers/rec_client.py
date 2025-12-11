@@ -2,9 +2,11 @@ import re
 from aiogram import types
 from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher.filters import Text
+from datetime import date
 from states.states import Form
-from keyboards.keyboards import kb_back_inline
+from keyboards.keyboards import kb_back_inline, get_calendar_keyboard, months_ru
 from database.database import save_client
+from database.request_for_date import get_marked_days_for_month
 
 DATE_REGEX = r'^\d{2}\.\d{2}\.\d{4}$'
 
@@ -26,8 +28,12 @@ async def process_link(message: types.Message, state):
 
 async def process_time(message: types.Message, state):
     client_time = message.text.strip()
-    await message.answer('Введите дату записи клиента (формат: DD.MM.YYYY): ', reply_markup=kb_back_inline)
     await state.update_data(time=client_time)
+    # Показать инлайн-календарь для выбора даты
+    today = date.today()
+    marked = get_marked_days_for_month(today.year, today.month)
+    calendar_kb = get_calendar_keyboard(today.year, today.month, marked)
+    await message.answer(f"Выберите дату: {months_ru[today.month - 1]} {today.year}", reply_markup=calendar_kb)
     await Form.waiting_for_date.set()
 
 async def process_request_for_data(message: types.Message, state):
@@ -43,6 +49,46 @@ async def process_request_for_data(message: types.Message, state):
     await state.update_data(day_rec=formatted_date)
     await message.answer('Введите предоплату: ', reply_markup=kb_back_inline)
     await Form.waiting_for_prepayment.set()
+
+async def rec_calendar_nav(callback_query: types.CallbackQuery, state):
+    # Навигация по календарю во время выбора даты записи
+    try:
+        data = callback_query.data  # cal_prev_YYYY_MM / cal_next_YYYY_MM / cal_today_Y_M
+        if data.startswith("cal_today_"):
+            # В режиме записи клиента кнопка "Сегодня" выбирает текущую дату
+            ymd = date.today().isoformat()
+            await state.update_data(day_rec=ymd)
+            await callback_query.message.answer('Введите предоплату: ', reply_markup=kb_back_inline)
+            await Form.waiting_for_prepayment.set()
+            await callback_query.answer()
+            return
+        else:
+            _, kind, y, m = data.split("_")
+            year = int(y)
+            month = int(m)
+            delta = -1 if kind == "prev" else 1
+            # вычислить новый год/месяц
+            m2 = month + delta
+            year = year + (m2 - 1) // 12
+            month = ((m2 - 1) % 12) + 1
+        marked = get_marked_days_for_month(year, month)
+        kb = get_calendar_keyboard(year, month, marked)
+        await callback_query.message.edit_text(f"Выберите дату: {months_ru[month - 1]} {year}")
+        await callback_query.message.edit_reply_markup(reply_markup=kb)
+        await callback_query.answer()
+    except Exception:
+        await callback_query.answer("Не удалось обновить календарь")
+
+async def rec_calendar_day(callback_query: types.CallbackQuery, state):
+    # Выбор дня в календаре при записи клиента
+    try:
+        _, _, ymd = callback_query.data.split("_", 2)  # cal_day_YYYY-MM-DD
+        await state.update_data(day_rec=ymd)
+        await callback_query.message.answer('Введите предоплату: ', reply_markup=kb_back_inline)
+        await Form.waiting_for_prepayment.set()
+        await callback_query.answer()
+    except Exception:
+        await callback_query.answer("Не удалось выбрать дату")
 
 async def process_prepayment(message: types.Message, state):
     text = message.text.strip().replace(' ', '').replace(',', '.')
@@ -73,5 +119,11 @@ def register_handlers(dp: Dispatcher):
     dp.register_message_handler(process_name, state=Form.waiting_for_name)
     dp.register_message_handler(process_link, state=Form.waiting_for_link)
     dp.register_message_handler(process_time, state=Form.waiting_for_time)
+    # Календарь выбора даты
+    dp.register_callback_query_handler(rec_calendar_nav, state=Form.waiting_for_date, text_startswith='cal_prev_')
+    dp.register_callback_query_handler(rec_calendar_nav, state=Form.waiting_for_date, text_startswith='cal_next_')
+    dp.register_callback_query_handler(rec_calendar_nav, state=Form.waiting_for_date, text_startswith='cal_today_')
+    dp.register_callback_query_handler(rec_calendar_day, state=Form.waiting_for_date, text_startswith='cal_day_')
+    # Оставляем текстовый ввод даты как запасной вариант
     dp.register_message_handler(process_request_for_data, state=Form.waiting_for_date)
     dp.register_message_handler(process_prepayment, state=Form.waiting_for_prepayment)
