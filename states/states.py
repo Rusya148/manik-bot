@@ -18,3 +18,6 @@ class SalaryForm(StatesGroup):
 class ExpensesForm(StatesGroup):
     waiting_for_expenses = State()
     waiting_for_month = State()
+
+class ScheduleForm(StatesGroup):
+    selecting_days = State()
