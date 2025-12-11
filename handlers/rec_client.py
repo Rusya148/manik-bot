@@ -4,7 +4,7 @@ from aiogram.dispatcher import Dispatcher
 from aiogram.dispatcher.filters import Text
 from datetime import date
 from states.states import Form
-from keyboards.keyboards import kb_back_inline, get_calendar_keyboard, months_ru
+from keyboards.keyboards import kb_back_inline, get_calendar_keyboard, months_ru, get_prepayment_keyboard
 from database.database import save_client
 from database.request_for_date import get_marked_days_for_month
 
@@ -84,20 +84,21 @@ async def rec_calendar_day(callback_query: types.CallbackQuery, state):
     try:
         _, _, ymd = callback_query.data.split("_", 2)  # cal_day_YYYY-MM-DD
         await state.update_data(day_rec=ymd)
-        await callback_query.message.answer('Введите предоплату: ', reply_markup=kb_back_inline)
+        await callback_query.message.answer('Предоплата?', reply_markup=get_prepayment_keyboard())
         await Form.waiting_for_prepayment.set()
         await callback_query.answer()
     except Exception:
         await callback_query.answer("Не удалось выбрать дату")
 
 async def process_prepayment(message: types.Message, state):
+    # Резервный путь: если пользователь всё же ввёл число
     text = message.text.strip().replace(' ', '').replace(',', '.')
     try:
         prepayment = float(text)
         if prepayment < 0:
             raise ValueError("negative")
     except Exception:
-        await message.answer("Введите корректную сумму предоплаты (неотрицательное число).", reply_markup=kb_back_inline)
+        await message.answer("Выберите предоплату кнопками ниже.", reply_markup=get_prepayment_keyboard())
         return
 
     user_data = await state.get_data()
@@ -114,6 +115,26 @@ async def process_prepayment(message: types.Message, state):
 
     await state.finish()
 
+async def _finalize_client(callback_query: types.CallbackQuery, state, prepayment_value: float):
+    user_data = await state.get_data()
+    client_name = user_data['name']
+    client_link = user_data['link']
+    client_time = user_data['time']
+    client_date = user_data['day_rec']
+    try:
+        save_client(client_name, client_link, client_time, client_date, prepayment_value)
+        await callback_query.message.answer('Клиент успешно записан!')
+    except Exception as e:
+        await callback_query.message.answer(f"Произошла ошибка при записи клиента: {e}")
+    await state.finish()
+    await callback_query.answer()
+
+async def set_prepayment_yes(callback_query: types.CallbackQuery, state):
+    await _finalize_client(callback_query, state, 1.0)
+
+async def set_prepayment_no(callback_query: types.CallbackQuery, state):
+    await _finalize_client(callback_query, state, 0.0)
+
 def register_handlers(dp: Dispatcher):
     dp.register_message_handler(rec_client, Text(equals='Записать клиента'))
     dp.register_message_handler(process_name, state=Form.waiting_for_name)
@@ -127,3 +148,5 @@ def register_handlers(dp: Dispatcher):
     # Оставляем текстовый ввод даты как запасной вариант
     dp.register_message_handler(process_request_for_data, state=Form.waiting_for_date)
     dp.register_message_handler(process_prepayment, state=Form.waiting_for_prepayment)
+    dp.register_callback_query_handler(set_prepayment_yes, state=Form.waiting_for_prepayment, text='prepay_yes')
+    dp.register_callback_query_handler(set_prepayment_no, state=Form.waiting_for_prepayment, text='prepay_no')

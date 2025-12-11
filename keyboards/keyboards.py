@@ -79,6 +79,13 @@ months_ru = [
     "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
 ]
 
+def get_prepayment_keyboard():
+    return InlineKeyboardMarkup(inline_keyboard=[
+        [InlineKeyboardButton(text="✓", callback_data="prepay_yes"),
+         InlineKeyboardButton(text="✗", callback_data="prepay_no")],
+        [InlineKeyboardButton(text="Назад", callback_data="back")]
+    ])
+
 def get_calendar_keyboard(year: int, month: int, marked_days=None) -> InlineKeyboardMarkup:
     if marked_days is None:
         marked_days = set()
