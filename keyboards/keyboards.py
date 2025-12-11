@@ -91,9 +91,10 @@ def get_calendar_keyboard(year: int, month: int, marked_days=None) -> InlineKeyb
     # Place header across three buttons: prev | title | next
     cal.row(prev_cb, header, next_cb)
 
-    # Weekdays row (Mon..Sun)
-    for wd in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]:
-        cal.insert(InlineKeyboardButton(text=wd, callback_data="cal_nop"))
+    # Weekdays row (Mon..Sun) — отдельной строкой, не вставляем в заголовок
+    wd_buttons = [InlineKeyboardButton(text=wd, callback_data="cal_nop")
+                  for wd in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]]
+    cal.row(*wd_buttons)
 
     # Month days
     month_calendar = calendar.Calendar(firstweekday=0).monthdayscalendar(year, month)
