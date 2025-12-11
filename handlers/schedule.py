@@ -136,7 +136,7 @@ async def generate_schedule(callback_query: types.CallbackQuery, state):
         booked = { _normalize_time_to_hhmm(row[3]) for row in get_clients_by_day(ymd) }
         human_date = dt.strftime("%d.%m")
         wd_short = WEEKDAYS_RU_SHORT[wd]
-        # Готовим множество занятых и ближайших к ним слотов (±120 минут)
+        # Готовим множество занятых и ближайших к ним слотов (±90 минут)
         booked_norm = {_normalize_time_to_hhmm(t) for t in booked if _normalize_time_to_hhmm(t)}
         booked_minutes = {_hhmm_to_minutes(t) for t in booked_norm if _hhmm_to_minutes(t) >= 0}
 
@@ -146,7 +146,7 @@ async def generate_schedule(callback_query: types.CallbackQuery, state):
         # Отсортируем по времени
         candidate_sorted = sorted(candidate_times, key=lambda t: _hhmm_to_minutes(t))
 
-        # Формируем строку: точные совпадения — зачёркнуть, слоты в пределах ±120 минут — убрать
+        # Формируем строку: точные совпадения — зачёркнуть, слоты в пределах ±90 минут — убрать
         slot_texts = []
         for hhmm in candidate_sorted:
             disp = _format_hhmm_with_dot(hhmm)
@@ -155,7 +155,7 @@ async def generate_schedule(callback_query: types.CallbackQuery, state):
                 slot_texts.append(f"<s>{disp}</s>")
                 continue
             # Пропускаем слишком близкие к занятым
-            too_close = any(abs(tmin - bm) <= 120 for bm in booked_minutes)
+            too_close = any(abs(tmin - bm) <= 90 for bm in booked_minutes)
             if not too_close:
                 slot_texts.append(disp)
         lines.append(f"{human_date} ({wd_short}) " + " ".join(slot_texts))
