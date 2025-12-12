@@ -23,14 +23,12 @@ async def salary_month_selection(callback_query: CallbackQuery):
 
 async def salary_for_selected_month(callback_query: CallbackQuery):
     try:
-        # Получаем номер месяца из callback_data
-        data = callback_query.data  # Например, "month_1"
-        month_index = int(data.split("_")[1])  # Преобразуем в номер месяца
+        data = callback_query.data
+        month_index = int(data.split("_")[1])
 
         today = datetime.today()
-        year = today.year  # Используем текущий год
+        year = today.year
 
-        # Формируем строку для поиска в базе
         month_year = f"{year}-{month_index:02d}"
         total_salary = get_total_salary_for_month(month_year)
 
@@ -46,7 +44,6 @@ async def salary_for_selected_month(callback_query: CallbackQuery):
 
 
 async def add_salary(callback_query: CallbackQuery):
-    # Запрашиваем сумму для добавления
     await callback_query.message.answer("Сколько нужно добавить?", reply_markup=None)
     await SalaryForm.waiting_for_salary.set()
 
@@ -58,13 +55,10 @@ async def process_salary(message: Message, state):
             await message.answer("Пожалуйста, введите положительное значение зарплаты.")
             return
 
-        # Сохраняем сумму во временное состояние
         await state.update_data(salary_amount=salary_amount)
 
-        # Отправляем клавиатуру с выбором месяца
         await message.answer("Выберите месяц, в который нужно добавить зарплату:", reply_markup=get_months_keyboard())
 
-        # Переходим к состоянию выбора месяца
         await SalaryForm.waiting_for_month.set()
 
     except ValueError:
@@ -76,33 +70,27 @@ async def process_salary(message: Message, state):
 
 async def process_selected_month_for_add_salary(callback_query: CallbackQuery, state):
     try:
-        # Получаем данные из состояния (сумма зарплаты)
         data = await state.get_data()
         salary_amount = data.get("salary_amount")
         if not salary_amount:
             await callback_query.message.answer("Ошибка: не указана сумма.")
             return
 
-        # Получаем номер месяца из callback_data
-        month_index = int(callback_query.data.split("_")[1])  # Например, "month_1" -> 1
+        month_index = int(callback_query.data.split("_")[1])
 
         today = datetime.today()
-        year = today.year  # Используем текущий год
-        month_year = f"{year}-{month_index:02d}"  # Формируем месяц и год, например, "2025-03"
+        year = today.year
+        month_year = f"{year}-{month_index:02d}"
 
-        # Добавляем зарплату в БД
         add_salary_to_db(salary_amount, month_year)
 
-        # Получаем текущую сумму за месяц
         total_salary = get_total_salary_for_month(month_year)
         month_name = months[month_index - 1]
 
-        # Отправляем результат
         await callback_query.message.answer(f"Зарплата за {month_name}: {total_salary} руб.")
         await callback_query.message.answer(f"Сумма добавлена. Хотите продолжить добавление или удалить последнюю сумму?",
                                             reply_markup=get_continue_keyboard())
 
-        # Завершаем состояние
         await state.finish()
         await callback_query.answer()
 

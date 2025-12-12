@@ -10,11 +10,6 @@ async def clients_date(message: types.Message):
     await message.answer('На какой период показать записи?', reply_markup=kb_registered_client)
 
 def _parse_time_to_minutes(value: str) -> int:
-    """
-    Преобразует строку времени в минуты от полуночи для сортировки.
-    Поддерживает форматы: 'HH:MM', 'HH.MM', 'HH-MM', 'HH'.
-    Некорректные значения отправляются в конец списка.
-    """
     try:
         if not value:
             return 24 * 60 + 1
@@ -48,7 +43,6 @@ async def format_clients_message(clients):
     message = ""
     for date, clients in clients_by_day.items():
         message += f"——————————————\n<b>Дата: {date}</b>\n"
-        # Сортируем клиентов внутри дня по времени (по возрастанию)
         clients_sorted = sorted(clients, key=lambda c: _parse_time_to_minutes(c[3]))
         for client in clients_sorted:
             name = client[1]

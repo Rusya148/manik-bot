@@ -1,11 +1,9 @@
 import sqlite3
 
-# Установить соединение с базой данных
 def get_db_connection():
     connection = sqlite3.connect('database_client.db')
     return connection
 
-# Функция для создания таблицы клиентов
 def create_clients_table():
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -23,7 +21,6 @@ def create_clients_table():
     connection.close()
 
 
-# Миграция: добавить колонку prepayment, если её нет
 def migrate_clients_add_prepayment():
     try:
         with sqlite3.connect('database_client.db') as connection:
@@ -36,7 +33,6 @@ def migrate_clients_add_prepayment():
     except sqlite3.Error as e:
         print(f"Ошибка миграции (добавление prepayment): {e}")
 
-# Функция для создания таблицы зарплат
 def create_salary_table():
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -50,7 +46,6 @@ def create_salary_table():
     connection.commit()
     connection.close()
 
-# Функция для создания таблицы трат
 def create_expenses_table():
     connection = get_db_connection()
     cursor = connection.cursor()
@@ -64,7 +59,6 @@ def create_expenses_table():
     connection.commit()
     connection.close()
 
-# Функция для сохранения клиента
 def save_client(name, link, time, day_rec, prepayment):
     print(f"Saving client with: {name}, {link}, {time}, {day_rec}, prepayment={prepayment}")
     try:
@@ -79,7 +73,6 @@ def save_client(name, link, time, day_rec, prepayment):
     except Exception as e:
         print(f"Неизвестная ошибка: {e}")
 
-# Функция для добавления зарплаты в базу данных
 def add_salary_to_db(amount, month_year):
     try:
         with sqlite3.connect('database_client.db') as connection:
@@ -92,7 +85,6 @@ def add_salary_to_db(amount, month_year):
     except sqlite3.Error as e:
         print(f"Ошибка при добавлении зарплаты: {e}")
 
-# Функция для получения общей суммы зарплаты за месяц
 def get_total_salary_for_month(month_year):
     try:
         with sqlite3.connect('database_client.db') as connection:
@@ -106,7 +98,6 @@ def get_total_salary_for_month(month_year):
         print(f"Ошибка при получении общей суммы зарплаты: {e}")
         return 0
 
-# Функция для удаления последней зарплаты за месяц
 def remove_last_salary_from_db(month_year):
     try:
         with sqlite3.connect('database_client.db') as connection:
@@ -155,7 +146,6 @@ def remove_last_expenses_from_db(month_year):
     except sqlite3.Error as e:
         print(f"Ошибка при удалении последней траты: {e}")
 
-# Создание всех необходимых таблиц (если не существует)
 create_clients_table()
 migrate_clients_add_prepayment()
 create_salary_table()
