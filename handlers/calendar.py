@@ -23,9 +23,8 @@ async def open_calendar(message: types.Message):
 
 async def calendar_nav(callback_query: types.CallbackQuery):
     try:
-        data = callback_query.data  # cal_prev_YYYY_MM or cal_next_YYYY_MM or cal_today_Y_M
+        data = callback_query.data
         if data.startswith("cal_today_"):
-            # Переходим к текущему месяцу и сразу показываем записи на сегодня
             today = date.today()
             year = today.year
             month = today.month
@@ -40,7 +39,6 @@ async def calendar_nav(callback_query: types.CallbackQuery):
         kb = get_calendar_keyboard(year, month, marked)
         await callback_query.message.edit_text(f"Календарь: {months_ru[month - 1]} {year}")
         await callback_query.message.edit_reply_markup(reply_markup=kb)
-        # Если нажали "Сегодня" — сразу вывести список записей за текущий день
         if data.startswith("cal_today_"):
             ymd = date.today().isoformat()
             clients = get_clients_by_day(ymd)
@@ -66,17 +64,14 @@ async def calendar_nav(callback_query: types.CallbackQuery):
 
 async def calendar_day(callback_query: types.CallbackQuery):
     try:
-        # cal_day_YYYY-MM-DD
         _, _, ymd = callback_query.data.split("_", 2)
         clients = get_clients_by_day(ymd)
         if not clients:
             await callback_query.message.answer(f"Записей на {datetime.strptime(ymd, '%Y-%m-%d').strftime('%d.%m.%Y')} нет.")
             await callback_query.answer()
             return
-        # Sort by time as already ordered; format
         lines = [f"Записи на {datetime.strptime(ymd, '%Y-%m-%d').strftime('%d.%m.%Y')}:" ]
         for c in clients:
-            # id, name, link, time, day_rec, prepayment
             name = c[1] or ""
             link = c[2] or ""
             tm = c[3] or ""
