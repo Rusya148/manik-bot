@@ -6,6 +6,19 @@ from collections import defaultdict
 from database.request_for_date import get_clients_by_date_range
 from keyboards.keyboards import kb_registered_client
 
+def _format_prepayment(value):
+    if value is None:
+        return "✗"
+    try:
+        num = float(value)
+    except Exception:
+        return "✗"
+    if num == 0:
+        return "✗"
+    if num == 1:
+        return "✓"
+    return f"{num:.2f}".rstrip('0').rstrip('.')
+
 async def clients_date(message: types.Message):
     await message.answer('На какой период показать записи?', reply_markup=kb_registered_client)
 
@@ -49,10 +62,8 @@ async def format_clients_message(clients):
             username = client[2]
             appointment_time = client[3]
             appointment_date = client[4]
-            prepayment = 0
-            if len(client) > 5 and client[5] is not None:
-                prepayment = client[5]
-            prepayment_str = f"{prepayment:.2f}".rstrip('0').rstrip('.')
+            prepayment_value = client[5] if len(client) > 5 else None
+            prepayment_str = _format_prepayment(prepayment_value)
             message += f"{name}, {username},\nВремя записи: {appointment_time}\nПредоплата: {prepayment_str}\n\n"
     return message
 
