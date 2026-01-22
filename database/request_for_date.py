@@ -41,7 +41,6 @@ def get_marked_days_for_month(year: int, month: int):
         with sqlite3.connect('database_client.db') as connection:
             cursor = connection.cursor()
             start = f"{year:04d}-{month:02d}-01"
-            # SQLite: last day via date('start','start of month','+1 month','-1 day')
             cursor.execute('''
             SELECT strftime('%d', day_rec) as d
             FROM clients

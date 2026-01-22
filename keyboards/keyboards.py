@@ -91,20 +91,16 @@ def get_calendar_keyboard(year: int, month: int, marked_days=None) -> InlineKeyb
         marked_days = set()
     cal = InlineKeyboardMarkup(row_width=7)
 
-    # Header with month and navigation
     month_name = months_ru[month - 1]
     header = InlineKeyboardButton(text=f"{month_name} {year}", callback_data="cal_nop")
     prev_cb = InlineKeyboardButton(text="‹", callback_data=f"cal_prev_{year}_{month}")
     next_cb = InlineKeyboardButton(text="›", callback_data=f"cal_next_{year}_{month}")
-    # Place header across three buttons: prev | title | next
     cal.row(prev_cb, header, next_cb)
 
-    # Weekdays row (Mon..Sun) — отдельной строкой, не вставляем в заголовок
     wd_buttons = [InlineKeyboardButton(text=wd, callback_data="cal_nop")
                   for wd in ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]]
     cal.row(*wd_buttons)
 
-    # Month days
     month_calendar = calendar.Calendar(firstweekday=0).monthdayscalendar(year, month)
     for week in month_calendar:
         buttons = []
@@ -118,7 +114,6 @@ def get_calendar_keyboard(year: int, month: int, marked_days=None) -> InlineKeyb
                 buttons.append(InlineKeyboardButton(text=f"{day_num}{marker}", callback_data=f"cal_day_{ymd}"))
         cal.row(*buttons)
 
-    # Today shortcut
     today = date.today()
     cal.row(InlineKeyboardButton(text="Сегодня", callback_data=f"cal_today_{today.year}_{today.month}"))
     return cal

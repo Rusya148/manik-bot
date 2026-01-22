@@ -29,7 +29,6 @@ async def process_link(message: types.Message, state):
 async def process_time(message: types.Message, state):
     client_time = message.text.strip()
     await state.update_data(time=client_time)
-    # Показать инлайн-календарь для выбора даты
     today = date.today()
     marked = get_marked_days_for_month(today.year, today.month)
     calendar_kb = get_calendar_keyboard(today.year, today.month, marked)
@@ -51,14 +50,12 @@ async def process_request_for_data(message: types.Message, state):
     await Form.waiting_for_prepayment.set()
 
 async def rec_calendar_nav(callback_query: types.CallbackQuery, state):
-    # Навигация по календарю во время выбора даты записи
     try:
-        data = callback_query.data  # cal_prev_YYYY_MM / cal_next_YYYY_MM / cal_today_Y_M
+        data = callback_query.data
         if data.startswith("cal_today_"):
-            # В режиме записи клиента кнопка "Сегодня" выбирает текущую дату
             ymd = date.today().isoformat()
             await state.update_data(day_rec=ymd)
-            await callback_query.message.answer('Введите предоплату: ', reply_markup=kb_back_inline)
+            await callback_query.message.answer('Предоплата?', reply_markup=get_prepayment_keyboard())
             await Form.waiting_for_prepayment.set()
             await callback_query.answer()
             return
@@ -67,7 +64,6 @@ async def rec_calendar_nav(callback_query: types.CallbackQuery, state):
             year = int(y)
             month = int(m)
             delta = -1 if kind == "prev" else 1
-            # вычислить новый год/месяц
             m2 = month + delta
             year = year + (m2 - 1) // 12
             month = ((m2 - 1) % 12) + 1
@@ -80,9 +76,8 @@ async def rec_calendar_nav(callback_query: types.CallbackQuery, state):
         await callback_query.answer("Не удалось обновить календарь")
 
 async def rec_calendar_day(callback_query: types.CallbackQuery, state):
-    # Выбор дня в календаре при записи клиента
     try:
-        _, _, ymd = callback_query.data.split("_", 2)  # cal_day_YYYY-MM-DD
+        _, _, ymd = callback_query.data.split("_", 2)
         await state.update_data(day_rec=ymd)
         await callback_query.message.answer('Предоплата?', reply_markup=get_prepayment_keyboard())
         await Form.waiting_for_prepayment.set()
@@ -91,7 +86,6 @@ async def rec_calendar_day(callback_query: types.CallbackQuery, state):
         await callback_query.answer("Не удалось выбрать дату")
 
 async def process_prepayment(message: types.Message, state):
-    # Резервный путь: если пользователь всё же ввёл число
     text = message.text.strip().replace(' ', '').replace(',', '.')
     try:
         prepayment = float(text)

@@ -1,6 +1,6 @@
 import sqlite3
 
-DB_PATH = 'shedule.db'  # по требованию: отдельная БД для расписания
+DB_PATH = 'shedule.db'
 
 
 def get_connection():
@@ -43,16 +43,12 @@ def set_day_selected(year: int, month: int, day: int, selected: bool):
 
 
 def toggle_day(year: int, month: int, day: int) -> bool:
-    """
-    Переключает выбранность дня. Возвращает True, если день стал выбран, False — если снят.
-    """
     selected_now = get_selected_days(year, month)
     will_select = day not in selected_now
     set_day_selected(year, month, day, will_select)
     return will_select
 
 
-# Инициализация таблиц при импорте
 create_tables()
 
 

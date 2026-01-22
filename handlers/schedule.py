@@ -46,15 +46,14 @@ def _hhmm_to_minutes(hhmm: str) -> int:
         return -1
 
 
-# Базовые слоты по дням недели (0-пн ... 6-вс)
 DEFAULT_SLOTS = {
-    0: ["11:00", "14:00", "17:00", "19:00"],  # пн
-    1: ["11:00", "14:00", "17:00", "19:00"],  # вт
-    2: ["11:00", "14:00", "17:00", "19:00"],  # ср
-    3: ["11:00", "14:00", "17:00", "19:00"],  # чт
-    4: ["11:00", "14:00", "17:00", "19:00"],  # пт
-    5: ["10:00", "13:00", "16:00", "18:00"],  # сб
-    6: ["10:00", "13:00", "16:00", "18:00"],  # вс
+    0: ["11:00", "14:00", "17:00", "19:00"],
+    1: ["11:00", "14:00", "17:00", "19:00"],
+    2: ["11:00", "14:00", "17:00", "19:00"],
+    3: ["11:00", "14:00", "17:00", "19:00"],
+    4: ["11:00", "14:00", "17:00", "19:00"],
+    5: ["10:00", "13:00", "16:00", "18:00"],
+    6: ["10:00", "13:00", "16:00", "18:00"],
 }
 
 WEEKDAYS_RU_SHORT = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
@@ -128,25 +127,19 @@ async def generate_schedule(callback_query: types.CallbackQuery, state):
     for day in selected:
         ymd = f"{year}-{month:02d}-{day:02d}"
         dt = datetime.strptime(ymd, "%Y-%m-%d")
-        wd = dt.weekday()  # 0..6
+        wd = dt.weekday()
         slots = DEFAULT_SLOTS.get(wd, [])
         if not slots:
-            # Пропускаем дни без слотов (например, воскресенье)
             continue
         booked = { _normalize_time_to_hhmm(row[3]) for row in get_clients_by_day(ymd) }
         human_date = dt.strftime("%d.%m")
         wd_short = WEEKDAYS_RU_SHORT[wd]
-        # Готовим множество занятых и ближайших к ним слотов (±90 минут)
         booked_norm = {_normalize_time_to_hhmm(t) for t in booked if _normalize_time_to_hhmm(t)}
         booked_minutes = {_hhmm_to_minutes(t) for t in booked_norm if _hhmm_to_minutes(t) >= 0}
 
-        # Кандидаты к показу: объединяем базовые слоты и точные забронированные времена,
-        # чтобы всегда отображать забронированные как зачёркнутые, даже если их нет в слотах
         candidate_times = set(slots) | set(booked_norm)
-        # Отсортируем по времени
         candidate_sorted = sorted(candidate_times, key=lambda t: _hhmm_to_minutes(t))
 
-        # Формируем строку: точные совпадения — зачёркнуть, слоты в пределах ±90 минут — убрать
         slot_texts = []
         for hhmm in candidate_sorted:
             disp = _format_hhmm_with_dot(hhmm)
@@ -154,12 +147,11 @@ async def generate_schedule(callback_query: types.CallbackQuery, state):
             if hhmm in booked_norm:
                 slot_texts.append(f"<s>{disp}</s>")
                 continue
-            # Пропускаем слишком близкие к занятым
             too_close = any(abs(tmin - bm) <= 90 for bm in booked_minutes)
             if not too_close:
                 slot_texts.append(disp)
         lines.append(f"{human_date} ({wd_short}) " + " ".join(slot_texts))
-        lines.append("")  # пустая строка между днями
+        lines.append("")
 
     await callback_query.message.answer("\n".join(lines).rstrip(), parse_mode="HTML")
     await callback_query.answer("Готово")
