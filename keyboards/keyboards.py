@@ -1,18 +1,21 @@
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo
 import calendar
 from datetime import date
+from bot.config import webapp_url
 
-kb_start = ReplyKeyboardMarkup(
-    [
-        [KeyboardButton(text='Записать клиента'),
-         KeyboardButton(text='Удалить клиента'),
-         KeyboardButton(text='Клиенты')],
-        [KeyboardButton(text='Зарплата'),
-         KeyboardButton(text='Траты')],
-        [KeyboardButton(text='Календарь'),
-         KeyboardButton(text='Расписание')]
-    ], resize_keyboard=True
-)
+_kb_start_rows = [
+    [KeyboardButton(text='Записать клиента'),
+     KeyboardButton(text='Удалить клиента'),
+     KeyboardButton(text='Клиенты')],
+    [KeyboardButton(text='Зарплата'),
+     KeyboardButton(text='Траты')],
+    [KeyboardButton(text='Календарь'),
+     KeyboardButton(text='Расписание')],
+]
+if webapp_url:
+    _kb_start_rows.append([KeyboardButton(text='Веб-версия', web_app=WebAppInfo(url=webapp_url))])
+
+kb_start = ReplyKeyboardMarkup(_kb_start_rows, resize_keyboard=True)
 
 kb_salary = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text='Добавить', callback_data='add'),

@@ -1,0 +1,217 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f3f4f7;
+  color: #1f2933;
+}
+
+.app-header {
+  padding: 24px 20px 12px;
+  background: #1f2933;
+  color: #fff;
+}
+
+.app-title {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.app-subtitle {
+  margin-top: 6px;
+  color: #d9e2ec;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #fff;
+  overflow-x: auto;
+  border-bottom: 1px solid #e0e6ed;
+}
+
+.tab-button {
+  border: none;
+  background: #edf2f7;
+  color: #334e68;
+  padding: 8px 14px;
+  border-radius: 18px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tab-button.active {
+  background: #1f2933;
+  color: #fff;
+}
+
+.tabs-content {
+  padding: 20px;
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
+}
+
+h2 {
+  margin: 24px 0 12px;
+  font-size: 18px;
+}
+
+.card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
+}
+
+.form-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+input,
+select,
+button {
+  font-size: 14px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #d9e2ec;
+}
+
+button {
+  background: #1f2933;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.form-actions {
+  display: flex;
+  align-items: flex-end;
+}
+
+.form-inline {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.controls-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.range-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.list-block {
+  min-height: 60px;
+}
+
+.list-item {
+  padding: 10px 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.list-item:last-child {
+  border-bottom: none;
+}
+
+.list-title {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.list-meta {
+  color: #52606d;
+  font-size: 13px;
+}
+
+.hidden {
+  display: none;
+}
+
+.calendar-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.calendar-header,
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(36px, 1fr));
+  gap: 6px;
+}
+
+.calendar-header div {
+  text-align: center;
+  font-size: 12px;
+  color: #52606d;
+}
+
+.calendar-cell {
+  background: #f5f7fa;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 0;
+  cursor: pointer;
+  font-weight: 500;
+  color: #334e68;
+}
+
+.calendar-cell.marked {
+  background: #ffe8cc;
+}
+
+.calendar-cell.selected {
+  background: #2f855a;
+  color: #fff;
+}
+
+.calendar-cell.empty {
+  background: transparent;
+  cursor: default;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #1f2933;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+}
+
+.toast.error {
+  background: #c53030;
+}
+
+.toast.hidden {
+  display: none;
+}
