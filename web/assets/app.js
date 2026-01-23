@@ -124,7 +124,7 @@ const renderCalendar = (container, year, month, markedDays, onDayClick, selected
 
   const grid = document.createElement("div");
   grid.className = "calendar-body";
-  const totalCells = startWeekday + totalDays;
+  const totalCells = 42;
   for (let i = 0; i < totalCells; i += 1) {
     const cell = document.createElement("button");
     cell.type = "button";
