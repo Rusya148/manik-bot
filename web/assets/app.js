@@ -215,7 +215,8 @@ const setupClients = () => {
     loadRange(formatDateISO(today), formatDateISO(end));
   });
   document.getElementById("clients-all").addEventListener("click", () => {
-    loadRange("2000-01-01", "2099-12-31");
+    const today = formatDateISO(new Date());
+    loadRange(today, "2099-12-31");
   });
   document.getElementById("clients-range").addEventListener("click", () => {
     const start = document.getElementById("clients-from").value;
