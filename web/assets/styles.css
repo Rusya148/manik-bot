@@ -31,10 +31,14 @@ body {
     radial-gradient(circle at 10% 20%, rgba(248, 216, 72, 0.1), transparent 35%),
     radial-gradient(circle at 90% 0%, rgba(47, 91, 137, 0.08), transparent 40%),
     radial-gradient(circle at 30% 80%, rgba(248, 216, 72, 0.08), transparent 45%);
-  background-size: 100% 100%, cover, auto, auto, auto;
+  background-size: 100% 100%, var(--minion-bg-size, cover), auto, auto, auto;
   background-position: center, center, center, center, center;
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
   background-attachment: scroll, scroll, scroll, scroll, scroll;
+}
+
+.minion-theme[data-active-tab="schedule"] {
+  --minion-bg-size: 70% auto;
 }
 
 

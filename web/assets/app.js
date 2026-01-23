@@ -159,6 +159,8 @@ const renderCalendar = (container, year, month, markedDays, onDayClick, selected
 const setupTabs = () => {
   const buttons = document.querySelectorAll(".tab-button");
   const panels = document.querySelectorAll(".tab-panel");
+  const body = document.body;
+  body.dataset.activeTab = document.querySelector(".tab-button.active")?.dataset.tab || "";
   buttons.forEach((button) => {
     button.addEventListener("click", () => {
       buttons.forEach((btn) => btn.classList.remove("active"));
@@ -167,6 +169,7 @@ const setupTabs = () => {
       const panel = document.getElementById(`tab-${button.dataset.tab}`);
       panel.classList.add("active");
       setPanelTransition(panel);
+      body.dataset.activeTab = button.dataset.tab || "";
     });
   });
 };
