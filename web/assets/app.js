@@ -40,6 +40,17 @@ const setPanelTransition = (panel) => {
   window.setTimeout(() => panel.classList.remove("entering"), 350);
 };
 
+const DEFAULT_SLOTS = {
+  0: "11:00,14:00,17:00,19:00",
+  1: "11:00,14:00,17:00,19:00",
+  2: "11:00,14:00,17:00,19:00",
+  3: "11:00,14:00,17:00,19:00",
+  4: "11:00,14:00,17:00,19:00",
+  5: "10:00,13:00,16:00,18:00",
+  6: "10:00,13:00,16:00,18:00",
+};
+const SLOT_STORAGE_KEY = "scheduleSlots";
+
 const renderClients = (container, clients) => {
   if (!clients.length) {
     container.textContent = "Нет записей.";
@@ -136,7 +147,7 @@ const renderCalendar = (container, year, month, markedDays, onDayClick, selected
       if (iso === todayIso) {
         cell.classList.add("today");
       }
-      cell.addEventListener("click", () => onDayClick(day, iso));
+      cell.addEventListener("click", () => onDayClick(day, iso, cell));
     }
     grid.appendChild(cell);
   }
@@ -379,6 +390,68 @@ const setupSchedule = () => {
   const generateButton = document.getElementById("schedule-generate");
   const grid = document.getElementById("schedule-grid");
   const result = document.getElementById("schedule-result");
+  const resetButton = document.getElementById("schedule-reset");
+  const slotInputs = {
+    0: document.getElementById("slot-mon"),
+    1: document.getElementById("slot-tue"),
+    2: document.getElementById("slot-wed"),
+    3: document.getElementById("slot-thu"),
+    4: document.getElementById("slot-fri"),
+    5: document.getElementById("slot-sat"),
+    6: document.getElementById("slot-sun"),
+  };
+
+  const loadSlots = () => {
+    let saved = {};
+    try {
+      saved = JSON.parse(localStorage.getItem(SLOT_STORAGE_KEY) || "{}");
+    } catch (error) {
+      saved = {};
+    }
+    Object.entries(slotInputs).forEach(([weekday, input]) => {
+      if (!input) return;
+      input.value = saved[weekday] || DEFAULT_SLOTS[weekday] || "";
+      input.classList.remove("invalid");
+    });
+  };
+
+  const saveSlots = () => {
+    const payload = {};
+    Object.entries(slotInputs).forEach(([weekday, input]) => {
+      if (!input) return;
+      payload[weekday] = input.value;
+    });
+    localStorage.setItem(SLOT_STORAGE_KEY, JSON.stringify(payload));
+  };
+
+  const validateSlots = () => {
+    let valid = true;
+    Object.values(slotInputs).forEach((input) => {
+      if (!input) return;
+      input.classList.remove("invalid");
+      const value = input.value.trim();
+      if (!value) return;
+      const times = value.split(",").map((s) => s.trim()).filter(Boolean);
+      const ok = times.every((time) => /^\d{1,2}([:.]\d{1,2})?$/.test(time));
+      if (!ok) {
+        valid = false;
+        input.classList.add("invalid");
+      }
+    });
+    return valid;
+  };
+
+  const readSlots = () => {
+    const slots = {};
+    Object.entries(slotInputs).forEach(([weekday, input]) => {
+      if (!input || !input.value.trim()) return;
+      slots[weekday] = input.value
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+    });
+    return slots;
+  };
 
   const loadMonth = async () => {
     if (!monthInput.value) {
@@ -393,8 +466,11 @@ const setupSchedule = () => {
         year,
         month,
         [],
-        async (day) => {
+        async (day, _iso, cell) => {
           try {
+            if (cell) {
+              cell.classList.toggle("selected");
+            }
             await apiFetch("/schedule/toggle", {
               method: "POST",
               body: JSON.stringify({ year, month, day }),
@@ -402,6 +478,9 @@ const setupSchedule = () => {
             loadMonth();
           } catch (error) {
             showToast(error.message, true);
+            if (cell) {
+              cell.classList.toggle("selected");
+            }
           }
         },
         selected.days
@@ -434,10 +513,16 @@ const setupSchedule = () => {
       showToast("Выберите месяц", true);
       return;
     }
+    if (!validateSlots()) {
+      showToast("Проверьте формат времени слотов.", true);
+      return;
+    }
+    saveSlots();
     const { year, month } = parseMonthInput(monthInput.value);
     try {
       const data = await apiFetch(`/schedule/generate?year=${year}&month=${month}`, {
         method: "POST",
+        body: JSON.stringify({ slots: readSlots() }),
       });
       if (!data.lines.length) {
         result.textContent = "Дни не выбраны.";
@@ -449,10 +534,25 @@ const setupSchedule = () => {
     }
   });
 
+  Object.values(slotInputs).forEach((input) => {
+    if (!input) return;
+    input.addEventListener("input", () => {
+      input.classList.remove("invalid");
+    });
+  });
+  if (resetButton) {
+    resetButton.addEventListener("click", () => {
+      localStorage.removeItem(SLOT_STORAGE_KEY);
+      loadSlots();
+      showToast("Слоты сброшены к дефолту");
+    });
+  }
+
   if (!monthInput.value) {
     const now = new Date();
     monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
   }
+  loadSlots();
   loadMonth();
 };
 

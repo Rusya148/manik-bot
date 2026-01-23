@@ -159,6 +159,10 @@ class ScheduleToggle(BaseModel):
     day: int
 
 
+class ScheduleGenerateRequest(BaseModel):
+    slots: Optional[dict] = None
+
+
 @app.get("/")
 def root():
     return FileResponse(INDEX_PATH)
@@ -288,16 +292,32 @@ def schedule_toggle(payload: ScheduleToggle):
 
 
 @app.post("/api/schedule/generate")
-def schedule_generate(year: int, month: int):
+def schedule_generate(year: int, month: int, payload: ScheduleGenerateRequest = None):
     selected = sorted(get_selected_days(year, month))
     if not selected:
         return {"lines": []}
+    slots_override = DEFAULT_SLOTS
+    if payload and payload.slots:
+        normalized = {}
+        for k, times in payload.slots.items():
+            try:
+                weekday = int(k)
+            except Exception:
+                continue
+            if not isinstance(times, list):
+                continue
+            cleaned = [_normalize_time_to_hhmm(t) for t in times]
+            cleaned = [t for t in cleaned if t]
+            if cleaned:
+                normalized[weekday] = cleaned
+        if normalized:
+            slots_override = {**DEFAULT_SLOTS, **normalized}
     lines = [f"Расписание за {MONTHS_RU_GEN[month - 1]}:", ""]
     for day in selected:
         ymd = f"{year}-{month:02d}-{day:02d}"
         dt = datetime.strptime(ymd, "%Y-%m-%d")
         wd = dt.weekday()
-        slots = DEFAULT_SLOTS.get(wd, [])
+        slots = slots_override.get(wd, [])
         if not slots:
             continue
         booked = {_normalize_time_to_hhmm(row[3]) for row in get_clients_by_day(ymd)}

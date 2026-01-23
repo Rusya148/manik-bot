@@ -24,8 +24,9 @@
 
   <div class="minion-parade" aria-hidden="true">
     <img class="minion-buddy" src="/assets/images/image.png" alt="Minion" />
-    <img class="minion-buddy" src="/assets/images/image%20copy.png" alt="Minion" />
     <img class="minion-buddy" src="/assets/images/image%20copy%202.png" alt="Minion" />
+    <img class="minion-buddy" src="/assets/images/image%20copy%203.png" alt="Minion" />
+    <img class="minion-buddy" src="/assets/images/image%20copy%204.png" alt="Minion" />
   </div>
 
   <nav class="tabs">
@@ -130,6 +131,43 @@
       <div class="calendar-legend">
         <span class="legend-item"><span class="legend-dot selected"></span>Выбрано</span>
         <span class="legend-item"><span class="legend-dot weekend"></span>Выходной</span>
+      </div>
+      <div class="card schedule-slots">
+        <h3>Временные слоты для генерации</h3>
+        <div class="form-grid">
+          <label>
+            Пн
+            <input type="text" id="slot-mon" placeholder="11:00,14:00,17:00,19:00" />
+          </label>
+          <label>
+            Вт
+            <input type="text" id="slot-tue" placeholder="11:00,14:00,17:00,19:00" />
+          </label>
+          <label>
+            Ср
+            <input type="text" id="slot-wed" placeholder="11:00,14:00,17:00,19:00" />
+          </label>
+          <label>
+            Чт
+            <input type="text" id="slot-thu" placeholder="11:00,14:00,17:00,19:00" />
+          </label>
+          <label>
+            Пт
+            <input type="text" id="slot-fri" placeholder="11:00,14:00,17:00,19:00" />
+          </label>
+          <label>
+            Сб
+            <input type="text" id="slot-sat" placeholder="10:00,13:00,16:00,18:00" />
+          </label>
+          <label>
+            Вс
+            <input type="text" id="slot-sun" placeholder="10:00,13:00,16:00,18:00" />
+          </label>
+        </div>
+        <div class="schedule-hint">Формат: 11:00,14:00,17:00</div>
+        <div class="schedule-actions">
+          <button type="button" id="schedule-reset" class="action-button">Сбросить к дефолту</button>
+        </div>
       </div>
       <div id="schedule-result" class="card list-block"></div>
     </section>

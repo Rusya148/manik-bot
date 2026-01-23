@@ -14,6 +14,7 @@
   --minion-shadow: 0 12px 30px rgba(25, 43, 66, 0.12);
   --minion-shadow-soft: 0 8px 20px rgba(25, 43, 66, 0.08);
   --minion-hero: url("/assets/images/image.png");
+  --minion-bg-image: url("/assets/images/image%20copy.png");
 }
 
 body {
@@ -26,9 +27,14 @@ body {
 
 .minion-theme {
   background-image:
+    linear-gradient(180deg, rgba(246, 247, 251, 0.95) 0%, rgba(246, 247, 251, 0.88) 50%, rgba(246, 247, 251, 0.95) 100%),
+    var(--minion-bg-image),
     radial-gradient(circle at 10% 20%, rgba(248, 216, 72, 0.18), transparent 35%),
     radial-gradient(circle at 90% 0%, rgba(47, 91, 137, 0.14), transparent 40%),
     radial-gradient(circle at 30% 80%, rgba(248, 216, 72, 0.12), transparent 45%);
+  background-size: cover, cover, auto, auto, auto;
+  background-position: center, center, center, center, center;
+  background-attachment: fixed, fixed, scroll, scroll, scroll;
 }
 
 .app-header {
@@ -54,7 +60,7 @@ body {
 .minion-avatar {
   width: 52px;
   height: 52px;
-  background-image: url("/assets/images/image.png");
+  background-image: url("/assets/images/image%20copy%203.png");
   background-size: cover;
   background-position: center;
   border-radius: 18px 18px 14px 14px;
@@ -312,6 +318,27 @@ button:active {
   align-items: center;
 }
 
+.schedule-slots h3 {
+  margin: 0 0 12px;
+  font-size: 16px;
+}
+
+.schedule-hint {
+  margin-top: 10px;
+  color: var(--minion-muted);
+  font-size: 12px;
+}
+
+.schedule-actions {
+  margin-top: 10px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+input.invalid {
+  border-color: #e53e3e;
+  box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);
+}
 .month-nav {
   display: flex;
   gap: 6px;
