@@ -109,6 +109,8 @@ const renderCalendar = (container, year, month, markedDays, onDayClick, selected
   const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
   const today = new Date();
   const todayIso = formatDateISO(today);
+  const selectedSet = new Set((selectedDays || []).map((value) => Number(value)));
+  const markedSet = new Set((markedDays || []).map((value) => Number(value)));
 
   container.innerHTML = "";
   const header = document.createElement("div");
@@ -135,10 +137,10 @@ const renderCalendar = (container, year, month, markedDays, onDayClick, selected
       const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
       const weekday = (new Date(year, month - 1, day).getDay() + 6) % 7;
       cell.textContent = day;
-      if (markedDays.includes(day)) {
+      if (markedSet.has(day)) {
         cell.classList.add("marked");
       }
-      if (selectedDays.includes(day)) {
+      if (selectedSet.has(day)) {
         cell.classList.add("selected");
       }
       if (weekday >= 5) {
@@ -400,6 +402,7 @@ const setupSchedule = () => {
     5: document.getElementById("slot-sat"),
     6: document.getElementById("slot-sun"),
   };
+  const slotInputElements = Object.values(slotInputs).filter(Boolean);
 
   const loadSlots = () => {
     let saved = {};
@@ -540,6 +543,18 @@ const setupSchedule = () => {
       input.classList.remove("invalid");
     });
   });
+
+  const blurActiveSlotInput = (event) => {
+    if (!document.activeElement || document.activeElement.tagName !== "INPUT") return;
+    if (slotInputElements.includes(document.activeElement)) {
+      if (!event.target.closest(".schedule-slots")) {
+        document.activeElement.blur();
+      }
+    }
+  };
+
+  document.addEventListener("touchstart", blurActiveSlotInput);
+  document.addEventListener("mousedown", blurActiveSlotInput);
   if (resetButton) {
     resetButton.addEventListener("click", () => {
       localStorage.removeItem(SLOT_STORAGE_KEY);
