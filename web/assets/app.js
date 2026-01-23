@@ -26,6 +26,15 @@ const parseMonthInput = (value) => {
   return { year, month };
 };
 
+const toMonthValue = (year, month) =>
+  `${year}-${String(month).padStart(2, "0")}`;
+
+const shiftMonthValue = (value, delta) => {
+  const { year, month } = parseMonthInput(value);
+  const date = new Date(year, month - 1 + delta, 1);
+  return toMonthValue(date.getFullYear(), date.getMonth() + 1);
+};
+
 const setPanelTransition = (panel) => {
   panel.classList.add("entering");
   window.setTimeout(() => panel.classList.remove("entering"), 350);
@@ -48,6 +57,37 @@ const renderClients = (container, clients) => {
       `
     )
     .join("");
+};
+
+const renderDayClients = (container, clients, onEdit, onDelete) => {
+  if (!clients.length) {
+    container.textContent = "Нет записей.";
+    return;
+  }
+  container.innerHTML = clients
+    .map(
+      (client) => `
+        <div class="list-item" data-client-id="${client.id}">
+          <div class="list-title">${client.name}</div>
+          <div class="list-meta">Дата: ${client.date} • Время: ${client.time}</div>
+          <div class="list-meta">Ссылка: ${client.link || "-"}</div>
+          <div class="list-meta">Предоплата: ${client.prepayment_display}</div>
+          <div class="list-actions">
+            <button type="button" class="action-button" data-action="edit">Редактировать</button>
+            <button type="button" class="action-button danger" data-action="delete">Удалить</button>
+          </div>
+        </div>
+      `
+    )
+    .join("");
+
+  container.querySelectorAll(".list-item").forEach((item) => {
+    const clientId = Number(item.dataset.clientId);
+    const client = clients.find((c) => c.id === clientId);
+    if (!client) return;
+    item.querySelector("[data-action='edit']").addEventListener("click", () => onEdit(client));
+    item.querySelector("[data-action='delete']").addEventListener("click", () => onDelete(client));
+  });
 };
 
 const renderCalendar = (container, year, month, markedDays, onDayClick, selectedDays = []) => {
@@ -206,6 +246,97 @@ const setupCalendar = () => {
   const loadButton = document.getElementById("calendar-load");
   const grid = document.getElementById("calendar-grid");
   const dayClients = document.getElementById("calendar-day-clients");
+  const modal = document.getElementById("edit-modal");
+  const editForm = document.getElementById("edit-form");
+  const editClose = document.getElementById("edit-close");
+  const editPrepaymentType = editForm.querySelector("[name='prepaymentType']");
+  const editPrepaymentAmountField = document.getElementById("edit-prepayment-amount-field");
+  let activeClient = null;
+  let activeDayIso = null;
+
+  const closeModal = () => {
+    modal.classList.add("hidden");
+    activeClient = null;
+  };
+
+  const openModal = (client) => {
+    activeClient = client;
+    editForm.name.value = client.name || "";
+    editForm.link.value = client.link || "";
+    editForm.time.value = client.time || "";
+    editForm.date.value = client.date || "";
+    if (client.prepayment === 1) {
+      editPrepaymentType.value = "yes";
+      editPrepaymentAmountField.classList.add("hidden");
+      editForm.prepaymentAmount.value = "";
+    } else if (!client.prepayment) {
+      editPrepaymentType.value = "no";
+      editPrepaymentAmountField.classList.add("hidden");
+      editForm.prepaymentAmount.value = "";
+    } else {
+      editPrepaymentType.value = "amount";
+      editPrepaymentAmountField.classList.remove("hidden");
+      editForm.prepaymentAmount.value = client.prepayment;
+    }
+    modal.classList.remove("hidden");
+  };
+
+  editPrepaymentType.addEventListener("change", () => {
+    editPrepaymentAmountField.classList.toggle(
+      "hidden",
+      editPrepaymentType.value !== "amount"
+    );
+  });
+
+  editClose.addEventListener("click", closeModal);
+  modal.addEventListener("click", (event) => {
+    if (event.target === modal) closeModal();
+  });
+
+  editForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    if (!activeClient) return;
+    let prepayment = 0;
+    if (editPrepaymentType.value === "yes") prepayment = 1;
+    if (editPrepaymentType.value === "amount") {
+      prepayment = Number(editForm.prepaymentAmount.value || 0);
+    }
+    const payload = {
+      name: editForm.name.value,
+      link: editForm.link.value,
+      time: editForm.time.value,
+      date: editForm.date.value,
+      prepayment,
+    };
+    try {
+      await apiFetch(`/clients/${activeClient.id}`, {
+        method: "PUT",
+        body: JSON.stringify(payload),
+      });
+      showToast("Запись обновлена");
+      closeModal();
+      if (activeDayIso) {
+        const clients = await apiFetch(`/clients/day?date_iso=${activeDayIso}`);
+        renderDayClients(dayClients, clients, openModal, handleDelete);
+      }
+    } catch (error) {
+      showToast(error.message, true);
+    }
+  });
+
+  const handleDelete = async (client) => {
+    if (!confirm("Удалить запись?")) return;
+    try {
+      await apiFetch(`/clients/${client.id}`, { method: "DELETE" });
+      showToast("Запись удалена");
+      if (activeDayIso) {
+        const clients = await apiFetch(`/clients/day?date_iso=${activeDayIso}`);
+        renderDayClients(dayClients, clients, openModal, handleDelete);
+      }
+    } catch (error) {
+      showToast(error.message, true);
+    }
+  };
 
   const loadMonth = async () => {
     if (!monthInput.value) {
@@ -222,8 +353,9 @@ const setupCalendar = () => {
         data.days,
         async (_day, iso) => {
           try {
+            activeDayIso = iso;
             const clients = await apiFetch(`/clients/day?date_iso=${iso}`);
-            renderClients(dayClients, clients);
+            renderDayClients(dayClients, clients, openModal, handleDelete);
           } catch (error) {
             showToast(error.message, true);
           }
@@ -240,6 +372,8 @@ const setupCalendar = () => {
 
 const setupSchedule = () => {
   const monthInput = document.getElementById("schedule-month");
+  const prevButton = document.getElementById("schedule-prev");
+  const nextButton = document.getElementById("schedule-next");
   const loadButton = document.getElementById("schedule-load");
   const generateButton = document.getElementById("schedule-generate");
   const grid = document.getElementById("schedule-grid");
@@ -247,8 +381,8 @@ const setupSchedule = () => {
 
   const loadMonth = async () => {
     if (!monthInput.value) {
-      showToast("Выберите месяц", true);
-      return;
+      const now = new Date();
+      monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
     }
     const { year, month } = parseMonthInput(monthInput.value);
     try {
@@ -278,6 +412,22 @@ const setupSchedule = () => {
   };
 
   loadButton.addEventListener("click", loadMonth);
+  prevButton.addEventListener("click", () => {
+    if (!monthInput.value) {
+      const now = new Date();
+      monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
+    }
+    monthInput.value = shiftMonthValue(monthInput.value, -1);
+    loadMonth();
+  });
+  nextButton.addEventListener("click", () => {
+    if (!monthInput.value) {
+      const now = new Date();
+      monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
+    }
+    monthInput.value = shiftMonthValue(monthInput.value, 1);
+    loadMonth();
+  });
   generateButton.addEventListener("click", async () => {
     if (!monthInput.value) {
       showToast("Выберите месяц", true);
@@ -297,6 +447,12 @@ const setupSchedule = () => {
       showToast(error.message, true);
     }
   });
+
+  if (!monthInput.value) {
+    const now = new Date();
+    monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
+  }
+  loadMonth();
 };
 
 const setupSalary = () => {

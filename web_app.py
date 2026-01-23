@@ -11,11 +11,13 @@ from pydantic import BaseModel
 from database.database import (
     add_expenses_to_db,
     add_salary_to_db,
+    delete_client_by_id,
     get_total_expenses_for_month,
     get_total_salary_for_month,
     remove_last_expenses_from_db,
     remove_last_salary_from_db,
     save_client,
+    update_client_by_id,
 )
 from database.delete_client import delete_client
 from database.request_for_date import (
@@ -201,9 +203,40 @@ def create_client(payload: ClientCreate):
     return {"status": "ok"}
 
 
+@app.put("/api/clients/{client_id}")
+def update_client(client_id: int, payload: ClientCreate):
+    try:
+        day_rec = _normalize_date(payload.date)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid date format")
+    time_norm = _normalize_time_to_hhmm(payload.time)
+    if not time_norm:
+        raise HTTPException(status_code=400, detail="Invalid time format")
+    prepayment = payload.prepayment if payload.prepayment is not None else 0
+    updated = update_client_by_id(
+        client_id,
+        payload.name.strip(),
+        payload.link.strip(),
+        time_norm,
+        day_rec,
+        prepayment,
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return {"status": "ok"}
+
+
 @app.delete("/api/clients/by-link")
 def delete_client_by_link(link: str = Query(..., min_length=1)):
     deleted = delete_client(link)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Client not found")
+    return {"status": "ok"}
+
+
+@app.delete("/api/clients/{client_id}")
+def delete_client_endpoint(client_id: int):
+    deleted = delete_client_by_id(client_id)
     if not deleted:
         raise HTTPException(status_code=404, detail="Client not found")
     return {"status": "ok"}

@@ -306,6 +306,19 @@ button:active {
   align-items: center;
 }
 
+.month-nav {
+  display: flex;
+  gap: 6px;
+}
+
+.month-nav button {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 12px;
+  font-size: 18px;
+}
+
 .range-group {
   display: flex;
   gap: 6px;
@@ -329,6 +342,27 @@ button:active {
 .list-item:hover {
   background: rgba(248, 216, 72, 0.12);
   border-radius: 12px;
+}
+
+.list-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.action-button {
+  background: #f1f5f9;
+  color: #1f2933;
+  border: 1px solid #d9e2ec;
+  box-shadow: none;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.action-button.danger {
+  background: #ffe3e3;
+  color: #9b1c1c;
+  border-color: #ffcccc;
 }
 
 .list-title {
@@ -483,6 +517,50 @@ button:active {
 
 .toast.hidden {
   display: none;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 20;
+  backdrop-filter: blur(4px);
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  width: min(720px, 100%);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.modal-title {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.icon-button {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #1f2933;
+  border: none;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
 }
 
 @keyframes panelFade {

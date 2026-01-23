@@ -73,6 +73,34 @@ def save_client(name, link, time, day_rec, prepayment):
     except Exception as e:
         print(f"Неизвестная ошибка: {e}")
 
+
+def update_client_by_id(client_id: int, name, link, time, day_rec, prepayment) -> bool:
+    try:
+        with sqlite3.connect('database_client.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute('''
+            UPDATE clients
+            SET name = ?, link = ?, time = ?, day_rec = ?, prepayment = ?
+            WHERE id = ?
+            ''', (name, link, time, day_rec, prepayment, client_id))
+            connection.commit()
+            return cursor.rowcount > 0
+    except sqlite3.Error as e:
+        print(f"Ошибка при обновлении клиента: {e}")
+        return False
+
+
+def delete_client_by_id(client_id: int) -> bool:
+    try:
+        with sqlite3.connect('database_client.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute('DELETE FROM clients WHERE id = ?', (client_id,))
+            connection.commit()
+            return cursor.rowcount > 0
+    except sqlite3.Error as e:
+        print(f"Ошибка при удалении клиента по id: {e}")
+        return False
+
 def add_salary_to_db(amount, month_year):
     try:
         with sqlite3.connect('database_client.db') as connection:
