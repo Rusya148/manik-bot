@@ -6,11 +6,28 @@
   <title>Manik Bot</title>
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
-<body>
+<body class="minion-theme">
   <header class="app-header">
-    <div class="app-title">Manik Bot</div>
-    <div class="app-subtitle">Веб-интерфейс для управления записями</div>
+    <div class="app-brand">
+      <div class="minion-avatar" aria-hidden="true"></div>
+      <div>
+        <div class="app-title">Manik Bot</div>
+        <div class="app-subtitle">Веб-интерфейс для управления записями</div>
+      </div>
+    </div>
+    <div class="app-sparkles" aria-hidden="true">
+      <span class="sparkle"></span>
+      <span class="sparkle"></span>
+      <span class="sparkle"></span>
+    </div>
   </header>
+
+  <div class="minion-parade" aria-hidden="true">
+    <div class="minion-buddy"></div>
+    <div class="minion-buddy"></div>
+    <div class="minion-buddy"></div>
+    <div class="minion-buddy"></div>
+  </div>
 
   <nav class="tabs">
     <button class="tab-button active" data-tab="clients">Клиенты</button>
@@ -88,6 +105,11 @@
         <button id="calendar-load">Показать</button>
       </div>
       <div id="calendar-grid" class="calendar-grid card"></div>
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="legend-dot marked"></span>Есть запись</span>
+        <span class="legend-item"><span class="legend-dot today"></span>Сегодня</span>
+        <span class="legend-item"><span class="legend-dot weekend"></span>Выходной</span>
+      </div>
       <div class="card list-block" id="calendar-day-clients"></div>
     </section>
 
@@ -102,6 +124,10 @@
         <button id="schedule-generate">Сгенерировать</button>
       </div>
       <div id="schedule-grid" class="calendar-grid card"></div>
+      <div class="calendar-legend">
+        <span class="legend-item"><span class="legend-dot selected"></span>Выбрано</span>
+        <span class="legend-item"><span class="legend-dot weekend"></span>Выходной</span>
+      </div>
       <div id="schedule-result" class="card list-block"></div>
     </section>
 

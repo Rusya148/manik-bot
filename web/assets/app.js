@@ -26,6 +26,11 @@ const parseMonthInput = (value) => {
   return { year, month };
 };
 
+const setPanelTransition = (panel) => {
+  panel.classList.add("entering");
+  window.setTimeout(() => panel.classList.remove("entering"), 350);
+};
+
 const renderClients = (container, clients) => {
   if (!clients.length) {
     container.textContent = "Нет записей.";
@@ -51,6 +56,8 @@ const renderCalendar = (container, year, month, markedDays, onDayClick, selected
   const startWeekday = (firstDay.getDay() + 6) % 7;
   const totalDays = lastDay.getDate();
   const weekdays = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
+  const today = new Date();
+  const todayIso = formatDateISO(today);
 
   container.innerHTML = "";
   const header = document.createElement("div");
@@ -75,12 +82,19 @@ const renderCalendar = (container, year, month, markedDays, onDayClick, selected
     } else {
       const day = i - startWeekday + 1;
       const iso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+      const weekday = (new Date(year, month - 1, day).getDay() + 6) % 7;
       cell.textContent = day;
       if (markedDays.includes(day)) {
         cell.classList.add("marked");
       }
       if (selectedDays.includes(day)) {
         cell.classList.add("selected");
+      }
+      if (weekday >= 5) {
+        cell.classList.add("weekend");
+      }
+      if (iso === todayIso) {
+        cell.classList.add("today");
       }
       cell.addEventListener("click", () => onDayClick(day, iso));
     }
@@ -97,7 +111,9 @@ const setupTabs = () => {
       buttons.forEach((btn) => btn.classList.remove("active"));
       panels.forEach((panel) => panel.classList.remove("active"));
       button.classList.add("active");
-      document.getElementById(`tab-${button.dataset.tab}`).classList.add("active");
+      const panel = document.getElementById(`tab-${button.dataset.tab}`);
+      panel.classList.add("active");
+      setPanelTransition(panel);
     });
   });
 };
