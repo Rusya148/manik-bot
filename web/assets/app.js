@@ -382,6 +382,11 @@ const setupCalendar = () => {
   };
 
   loadButton.addEventListener("click", loadMonth);
+  if (!monthInput.value) {
+    const now = new Date();
+    monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
+  }
+  loadMonth();
 };
 
 const setupSchedule = () => {
