@@ -47,10 +47,11 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ASSETS_DIR = os.path.join(BASE_DIR, "web", "assets")
-INDEX_PATH = os.path.join(BASE_DIR, "web", "index.html")
+DIST_DIR = os.path.join(BASE_DIR, "web", "dist")
+ASSETS_DIR = os.path.join(DIST_DIR, "assets")
+INDEX_PATH = os.path.join(DIST_DIR, "index.html")
 
-app.mount("/assets", StaticFiles(directory=ASSETS_DIR), name="assets")
+app.mount("/assets", StaticFiles(directory=ASSETS_DIR, check_dir=False), name="assets")
 
 
 def _format_prepayment(value) -> str:
@@ -177,7 +178,9 @@ class ScheduleSlotsUpdate(BaseModel):
 
 @app.get("/")
 def root():
-    return FileResponse(INDEX_PATH)
+    if os.path.exists(INDEX_PATH):
+        return FileResponse(INDEX_PATH)
+    return FileResponse(os.path.join(BASE_DIR, "web", "index.html"))
 
 
 @app.get("/api/health")

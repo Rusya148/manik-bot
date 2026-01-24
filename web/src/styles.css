@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --tg-bg-color: #f5f5f5;
+  --tg-text-color: #111111;
+  --tg-hint-color: #8a8a8a;
+  --tg-link-color: #2f80ed;
+  --tg-button-color: #2f80ed;
+  --tg-button-text-color: #ffffff;
+  --tg-secondary-bg-color: #ffffff;
+  --safe-area-top: env(safe-area-inset-top, 0px);
+  --safe-area-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-area-left: env(safe-area-inset-left, 0px);
+  --safe-area-right: env(safe-area-inset-right, 0px);
+  --app-bg: var(--tg-bg-color);
+  --app-card: var(--tg-secondary-bg-color);
+  --app-text: var(--tg-text-color);
+  --app-hint: var(--tg-hint-color);
+  --app-accent: var(--tg-button-color);
+  --app-accent-text: var(--tg-button-text-color);
+  --app-border: color-mix(in srgb, var(--tg-hint-color) 40%, transparent);
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--app-bg);
+  color: var(--app-text);
+  margin: 0;
+}
+
+.app-shell {
+  min-height: 100%;
+  padding: calc(12px + var(--safe-area-top)) 12px
+    calc(88px + var(--safe-area-bottom));
+}
+
+.card {
+  background: var(--app-card);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.divider {
+  height: 1px;
+  background: var(--app-border);
+}
+
+.safe-area-bottom {
+  padding-bottom: calc(16px + var(--safe-area-bottom));
+}
+
+.sheet-backdrop {
+  background: rgba(0, 0, 0, 0.32);
+}
+
+.text-hint {
+  color: var(--app-hint);
+}
+
+.text-accent {
+  color: var(--app-accent);
+}
+
+.bg-accent {
+  background: var(--app-accent);
+  color: var(--app-accent-text);
+}
+
+.input-base {
+  background: var(--app-bg);
+  border: 1px solid var(--app-border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--app-text);
+}
+
+.input-base::placeholder {
+  color: var(--app-hint);
+}
