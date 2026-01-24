@@ -26,8 +26,7 @@ const formatDateDisplay = (value) => {
   const parts = value.split("-");
   if (parts.length === 3) {
     const [year, month, day] = parts;
-    const yy = year.slice(-2);
-    return `${day}-${month}-${yy}`;
+    return `${day}.${month}.${year}`;
   }
   return value;
 };
