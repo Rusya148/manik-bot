@@ -58,7 +58,6 @@ const DEFAULT_SLOTS = {
   5: "10:00,13:00,16:00,18:00",
   6: "10:00,13:00,16:00,18:00",
 };
-const SLOT_STORAGE_KEY = "scheduleSlots";
 
 const renderClients = (container, clients) => {
   if (!clients.length) {
@@ -189,6 +188,7 @@ const setupClients = () => {
   const prepaymentAmountField = document.getElementById("prepayment-amount-field");
   const list = document.getElementById("clients-list");
   const deleteForm = document.getElementById("client-delete-form");
+  const clientsTab = document.getElementById("tab-clients");
 
   prepaymentType.addEventListener("change", () => {
     prepaymentAmountField.classList.toggle("hidden", prepaymentType.value !== "amount");
@@ -265,6 +265,17 @@ const setupClients = () => {
       showToast(error.message, true);
     }
   });
+
+  const blurActiveClientInput = (event) => {
+    const active = document.activeElement;
+    if (!active || active.tagName !== "INPUT") return;
+    if (!clientsTab || !clientsTab.contains(active)) return;
+    if (event.target.closest("input, select, textarea, button")) return;
+    active.blur();
+  };
+
+  document.addEventListener("touchstart", blurActiveClientInput);
+  document.addEventListener("mousedown", blurActiveClientInput);
 };
 
 const setupCalendar = () => {
@@ -432,6 +443,8 @@ const setupSchedule = () => {
   const grid = document.getElementById("schedule-grid");
   const result = document.getElementById("schedule-result");
   const resetButton = document.getElementById("schedule-reset");
+  const slotsCard = document.getElementById("schedule-slots");
+  const slotsToggle = document.getElementById("slots-toggle");
   const slotInputs = {
     0: document.getElementById("slot-mon"),
     1: document.getElementById("slot-tue"),
@@ -443,10 +456,11 @@ const setupSchedule = () => {
   };
   const slotInputElements = Object.values(slotInputs).filter(Boolean);
 
-  const loadSlots = () => {
+  const loadSlots = async () => {
     let saved = {};
     try {
-      saved = JSON.parse(localStorage.getItem(SLOT_STORAGE_KEY) || "{}");
+      const data = await apiFetch("/schedule/slots");
+      saved = data.slots || {};
     } catch (error) {
       saved = {};
     }
@@ -457,13 +471,16 @@ const setupSchedule = () => {
     });
   };
 
-  const saveSlots = () => {
+  const saveSlots = async () => {
     const payload = {};
     Object.entries(slotInputs).forEach(([weekday, input]) => {
       if (!input) return;
       payload[weekday] = input.value;
     });
-    localStorage.setItem(SLOT_STORAGE_KEY, JSON.stringify(payload));
+    await apiFetch("/schedule/slots", {
+      method: "POST",
+      body: JSON.stringify({ slots: payload }),
+    });
   };
 
   const validateSlots = () => {
@@ -558,9 +575,9 @@ const setupSchedule = () => {
       showToast("Проверьте формат времени слотов.", true);
       return;
     }
-    saveSlots();
     const { year, month } = parseMonthInput(monthInput.value);
     try {
+      await saveSlots();
       const data = await apiFetch(`/schedule/generate?year=${year}&month=${month}`, {
         method: "POST",
         body: JSON.stringify({ slots: readSlots() }),
@@ -595,9 +612,23 @@ const setupSchedule = () => {
   document.addEventListener("mousedown", blurActiveSlotInput);
   if (resetButton) {
     resetButton.addEventListener("click", () => {
-      localStorage.removeItem(SLOT_STORAGE_KEY);
-      loadSlots();
-      showToast("Слоты сброшены к дефолту");
+      apiFetch("/schedule/slots/reset", { method: "POST" })
+        .then((data) => {
+          Object.entries(slotInputs).forEach(([weekday, input]) => {
+            if (!input) return;
+            input.value = data.slots?.[weekday] || DEFAULT_SLOTS[weekday] || "";
+            input.classList.remove("invalid");
+          });
+          showToast("Слоты сброшены к дефолту");
+        })
+        .catch((error) => showToast(error.message, true));
+    });
+  }
+
+  if (slotsToggle && slotsCard) {
+    slotsToggle.addEventListener("click", () => {
+      const collapsed = slotsCard.classList.toggle("collapsed");
+      slotsToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
     });
   }
 

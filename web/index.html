@@ -114,9 +114,13 @@
         <span class="legend-item"><span class="legend-dot selected"></span>Выбрано</span>
         <span class="legend-item"><span class="legend-dot weekend"></span>Выходной</span>
       </div>
-      <div class="card schedule-slots">
-        <h3>Временные слоты для генерации</h3>
-        <div class="form-grid">
+      <div class="card schedule-slots collapsed" id="schedule-slots">
+        <button type="button" class="slots-toggle" id="slots-toggle" aria-expanded="false">
+          <span>Временные слоты для генерации</span>
+          <span class="slots-chevron">›</span>
+        </button>
+        <div class="schedule-slots-body">
+          <div class="form-grid">
           <label>
             Пн
             <input type="text" id="slot-mon" placeholder="11:00,14:00,17:00,19:00" />
@@ -145,10 +149,11 @@
             Вс
             <input type="text" id="slot-sun" placeholder="10:00,13:00,16:00,18:00" />
           </label>
-        </div>
-        <div class="schedule-hint">Формат: 11:00,14:00,17:00</div>
-        <div class="schedule-actions">
-          <button type="button" id="schedule-reset" class="action-button">Сбросить к дефолту</button>
+          </div>
+          <div class="schedule-hint">Формат: 11:00,14:00,17:00</div>
+          <div class="schedule-actions">
+            <button type="button" id="schedule-reset" class="action-button">Сбросить к дефолту</button>
+          </div>
         </div>
       </div>
       <div id="schedule-result" class="card list-block"></div>

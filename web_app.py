@@ -25,7 +25,13 @@ from database.request_for_date import (
     get_clients_by_day,
     get_marked_days_for_month,
 )
-from database.schedule_db import get_selected_days, toggle_day
+from database.schedule_db import (
+    clear_schedule_slots,
+    get_schedule_slots,
+    get_selected_days,
+    save_schedule_slots,
+    toggle_day,
+)
 
 
 app = FastAPI(title="Manik Bot Web API")
@@ -163,6 +169,10 @@ class ScheduleGenerateRequest(BaseModel):
     slots: Optional[dict] = None
 
 
+class ScheduleSlotsUpdate(BaseModel):
+    slots: Optional[dict] = None
+
+
 @app.get("/")
 def root():
     return FileResponse(INDEX_PATH)
@@ -297,21 +307,13 @@ def schedule_generate(year: int, month: int, payload: ScheduleGenerateRequest = 
     if not selected:
         return {"lines": []}
     slots_override = DEFAULT_SLOTS
+    stored_slots = get_schedule_slots()
+    if stored_slots:
+        slots_override = {**DEFAULT_SLOTS, **stored_slots}
     if payload and payload.slots:
-        normalized = {}
-        for k, times in payload.slots.items():
-            try:
-                weekday = int(k)
-            except Exception:
-                continue
-            if not isinstance(times, list):
-                continue
-            cleaned = [_normalize_time_to_hhmm(t) for t in times]
-            cleaned = [t for t in cleaned if t]
-            if cleaned:
-                normalized[weekday] = cleaned
+        normalized = _normalize_slots_payload(payload.slots)
         if normalized:
-            slots_override = {**DEFAULT_SLOTS, **normalized}
+            slots_override = {**slots_override, **normalized}
     lines = [f"Расписание за {MONTHS_RU_GEN[month - 1]}:", ""]
     for day in selected:
         ymd = f"{year}-{month:02d}-{day:02d}"
@@ -344,6 +346,30 @@ def schedule_generate(year: int, month: int, payload: ScheduleGenerateRequest = 
     return {"lines": lines}
 
 
+@app.get("/api/schedule/slots")
+def schedule_slots_get():
+    stored = get_schedule_slots()
+    slots = {k: ", ".join(v) for k, v in stored.items()}
+    return {"slots": slots}
+
+
+@app.post("/api/schedule/slots")
+def schedule_slots_update(payload: ScheduleSlotsUpdate):
+    if not payload or not payload.slots:
+        raise HTTPException(status_code=400, detail="Slots required")
+    normalized = _normalize_slots_payload(payload.slots)
+    if not normalized:
+        raise HTTPException(status_code=400, detail="Invalid slots")
+    save_schedule_slots(normalized)
+    return {"status": "ok", "slots": {k: ", ".join(v) for k, v in normalized.items()}}
+
+
+@app.post("/api/schedule/slots/reset")
+def schedule_slots_reset():
+    clear_schedule_slots()
+    return {"status": "ok", "slots": {k: ", ".join(v) for k, v in DEFAULT_SLOTS.items()}}
+
+
 def _serialize_client(row):
     return {
         "id": row[0],
@@ -354,3 +380,23 @@ def _serialize_client(row):
         "prepayment": row[5] if len(row) > 5 else None,
         "prepayment_display": _format_prepayment(row[5] if len(row) > 5 else None),
     }
+
+
+def _normalize_slots_payload(raw_slots: dict) -> dict:
+    normalized = {}
+    for k, times in raw_slots.items():
+        try:
+            weekday = int(k)
+        except Exception:
+            continue
+        if isinstance(times, str):
+            parts = [s.strip() for s in times.split(",") if s.strip()]
+        elif isinstance(times, list):
+            parts = [str(s).strip() for s in times if str(s).strip()]
+        else:
+            continue
+        cleaned = [_normalize_time_to_hhmm(t) for t in parts]
+        cleaned = [t for t in cleaned if t]
+        if cleaned:
+            normalized[weekday] = cleaned
+    return normalized

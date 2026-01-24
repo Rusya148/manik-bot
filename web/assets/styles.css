@@ -227,6 +227,33 @@ button:active {
   font-size: 16px;
 }
 
+.slots-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.9);
+  color: #1f2933;
+  border: 1px solid rgba(217, 226, 236, 0.7);
+  box-shadow: none;
+}
+
+.slots-chevron {
+  font-size: 20px;
+  transform: rotate(90deg);
+  transition: transform 0.2s ease;
+}
+
+.schedule-slots.collapsed .schedule-slots-body {
+  display: none;
+}
+
+.schedule-slots.collapsed .slots-chevron {
+  transform: rotate(0deg);
+}
+
 .schedule-hint {
   margin-top: 10px;
   color: var(--minion-muted);
