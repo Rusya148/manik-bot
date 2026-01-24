@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
@@ -21,6 +21,7 @@ const ScheduleScreen = () => {
   const queryClient = useQueryClient();
   const [cursor, setCursor] = useState(() => toLocalIsoMonth(new Date()));
   const [message, setMessage] = useState<string[]>([]);
+  const messageRef = useRef<HTMLDivElement | null>(null);
 
   const [year, month] = cursor.split("-").map(Number);
   const monthIndex = month - 1;
@@ -103,7 +104,7 @@ const ScheduleScreen = () => {
         <div className="text-sm font-semibold">Сообщение для отправки</div>
         <Button onClick={() => generateMutation.mutate()}>Сгенерировать</Button>
         {message.length > 0 && (
-          <div className="space-y-2 text-sm">
+          <div className="space-y-2 text-sm" ref={messageRef}>
             {message.map((line, idx) => {
               if (!line) return <div key={`empty-${idx}`}>&nbsp;</div>;
               const parts = line.split(/(<s>.*?<\/s>)/g);
@@ -126,6 +127,23 @@ const ScheduleScreen = () => {
             <button
               className="text-xs text-accent"
               onClick={async () => {
+                const container = messageRef.current;
+                if (container) {
+                  const selection = window.getSelection();
+                  const range = document.createRange();
+                  range.selectNodeContents(container);
+                  selection?.removeAllRanges();
+                  selection?.addRange(range);
+                  const copied = document.execCommand("copy");
+                  selection?.removeAllRanges();
+                  if (copied) {
+                    window.dispatchEvent(
+                      new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+                    );
+                    return;
+                  }
+                }
+
                 const normalized = message
                   .map((line) =>
                     line
