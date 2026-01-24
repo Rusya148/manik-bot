@@ -170,21 +170,30 @@ const CalendarScreen = () => {
       <div className="card p-4 space-y-2">
         <div className="text-sm font-semibold">Записи на выбранный день</div>
         {bookings.length ? (
-          bookings.map((booking) => (
-            <button
-              key={`${booking.id}-${booking.time}`}
-              className="flex w-full items-center justify-between rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-left text-sm"
-              onClick={() => openBooking({ bookingId: booking.id })}
-            >
-              <span className="font-medium">{booking.time}</span>
-              <span className="flex items-center gap-2 text-xs text-hint">
-                <span>{booking.link?.startsWith("@") ? booking.link : booking.name}</span>
-                <span className="text-[color:var(--app-accent)]">
+          <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-[68px_1fr_1fr_52px] gap-2 text-xs text-hint">
+              <div>Время</div>
+              <div>Имя</div>
+              <div>Ссылка</div>
+              <div className="text-right">Предоплата</div>
+            </div>
+            {bookings.map((booking) => (
+              <button
+                key={`${booking.id}-${booking.time}`}
+                className="grid w-full grid-cols-[68px_1fr_1fr_52px] items-center gap-2 rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-left"
+                onClick={() => openBooking({ bookingId: booking.id })}
+              >
+                <span className="font-medium">{booking.time}</span>
+                <span className="truncate text-xs text-hint">{booking.name}</span>
+                <span className="truncate text-xs text-hint">
+                  {booking.link?.startsWith("@") ? booking.link : "—"}
+                </span>
+                <span className="text-right text-xs text-[color:var(--app-accent)]">
                   {booking.prepaymentDisplay ?? "✗"}
                 </span>
-              </span>
-            </button>
-          ))
+              </button>
+            ))}
+          </div>
         ) : (
           <div className="text-xs text-hint">Записей нет.</div>
         )}
