@@ -8,12 +8,15 @@ import {
   getMonthLabel,
   normalizeTimeInput,
   toLocalIsoMonth,
+  toLocalIsoDate,
 } from "@/shared/utils/date";
 import {
   generateScheduleMessage,
   getSelectedDays,
   toggleSelectedDay,
 } from "@/services/api/schedule";
+import { getClientsByDay, getMarkedDays } from "@/services/api/clients";
+import { Booking } from "@/types/domain";
 
 const weekdayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
@@ -22,6 +25,7 @@ const ScheduleScreen = () => {
   const [cursor, setCursor] = useState(() => toLocalIsoMonth(new Date()));
   const [message, setMessage] = useState<string[]>([]);
   const messageRef = useRef<HTMLDivElement | null>(null);
+  const [selectedDate, setSelectedDate] = useState(() => toLocalIsoDate(new Date()));
 
   const [year, month] = cursor.split("-").map(Number);
   const monthIndex = month - 1;
@@ -33,7 +37,33 @@ const ScheduleScreen = () => {
     queryFn: () => getSelectedDays(year, month),
   });
 
+  const { data: markedDays } = useQuery({
+    queryKey: ["clients", "marked-days", year, month],
+    queryFn: () => getMarkedDays(year, month),
+  });
+
+  const { data: dayClients } = useQuery({
+    queryKey: ["clients", "day", selectedDate],
+    queryFn: () => getClientsByDay(selectedDate),
+  });
+
   const selectedDays = new Set(selectedData?.days ?? []);
+  const markedSet = new Set(markedDays?.days ?? []);
+
+  const bookings = useMemo<Booking[]>(
+    () =>
+      (dayClients ?? [])
+        .map((item) => ({
+          id: item.id,
+          name: item.name,
+          link: item.link,
+          time: normalizeTimeInput(item.time),
+          date: item.date,
+          prepaymentDisplay: item.prepayment_display ?? undefined,
+        }))
+        .sort((a, b) => a.time.localeCompare(b.time)),
+    [dayClients],
+  );
 
   const toggleMutation = useMutation({
     mutationFn: (day: number) => toggleSelectedDay({ year, month, day }),
@@ -93,15 +123,21 @@ const ScheduleScreen = () => {
           {grid.map((cell, idx) => {
             if (!cell) return <div key={`empty-${idx}`} className="h-10" />;
             const active = selectedDays.has(cell.day);
+            const marked = markedSet.has(cell.day);
             return (
               <button
                 key={cell.iso}
                 className={`h-10 rounded-2xl text-sm ${
                   active
                     ? "bg-accent text-[var(--app-accent-text)]"
-                    : "bg-[color:var(--app-bg)] text-hint"
+                    : marked
+                      ? "bg-[color:var(--app-bg)] text-accent"
+                      : "bg-[color:var(--app-bg)] text-hint"
                 }`}
-                onClick={() => toggleMutation.mutate(cell.day)}
+                onClick={() => {
+                  setSelectedDate(cell.iso);
+                  toggleMutation.mutate(cell.day);
+                }}
               >
                 {cell.day}
               </button>
@@ -109,6 +145,37 @@ const ScheduleScreen = () => {
           })}
         </div>
         <div className="text-xs text-hint">Нажимай на дни, чтобы отметить рабочие.</div>
+      </Card>
+
+      <Card className="space-y-2">
+        <div className="text-sm font-semibold">Записи на выбранный день</div>
+        {bookings.length ? (
+          <div className="space-y-2 text-sm">
+            <div className="grid grid-cols-[72px_1fr_1fr_64px] gap-2 text-xs text-hint">
+              <div className="text-left">Время</div>
+              <div className="text-left">Имя</div>
+              <div className="text-left">Ссылка</div>
+              <div className="text-right">Предоплата</div>
+            </div>
+            {bookings.map((booking) => (
+              <div
+                key={`${booking.id}-${booking.time}`}
+                className="grid w-full grid-cols-[72px_1fr_1fr_64px] items-center gap-2 rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-left"
+              >
+                <span className="font-medium">{booking.time}</span>
+                <span className="truncate text-xs text-hint">{booking.name}</span>
+                <span className="truncate text-xs text-hint">
+                  {booking.link?.startsWith("@") ? booking.link : "—"}
+                </span>
+                <span className="text-right text-xs text-[color:var(--app-accent)]">
+                  {booking.prepaymentDisplay ?? "✗"}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-xs text-hint">Записей нет.</div>
+        )}
       </Card>
 
       <Card className="space-y-3">
