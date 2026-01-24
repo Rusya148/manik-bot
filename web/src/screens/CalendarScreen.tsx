@@ -196,7 +196,7 @@ const CalendarScreen = () => {
                       }}
                     >
                       <span className="truncate">{booking.link}</span>
-                      <span className="text-[11px]">Копировать</span>
+                      <span className="text-[11px] text-hint">⧉</span>
                     </button>
                   ) : (
                     "—"
