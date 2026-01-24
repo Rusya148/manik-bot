@@ -135,22 +135,28 @@ const ScheduleScreen = () => {
                   )
                   .join("\n");
                 const plain = normalized.replace(/<\/?s>/g, "");
+                const clipboard = navigator.clipboard as
+                  | {
+                      write?: (items: ClipboardItem[]) => Promise<void>;
+                      writeText?: (text: string) => Promise<void>;
+                    }
+                  | undefined;
                 try {
-                  if (navigator.clipboard && "write" in navigator.clipboard) {
+                  if (clipboard?.write) {
                     const item = new ClipboardItem({
                       "text/plain": new Blob([plain], { type: "text/plain" }),
                       "text/html": new Blob([normalized], { type: "text/html" }),
                     });
-                    await navigator.clipboard.write([item]);
-                  } else if (navigator.clipboard && "writeText" in navigator.clipboard) {
-                    await navigator.clipboard.writeText(plain);
+                    await clipboard.write([item]);
+                  } else if (clipboard?.writeText) {
+                    await clipboard.writeText(plain);
                   }
                   window.dispatchEvent(
                     new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
                   );
                 } catch {
-                  if (navigator.clipboard && "writeText" in navigator.clipboard) {
-                    await navigator.clipboard.writeText(plain);
+                  if (clipboard?.writeText) {
+                    await clipboard.writeText(plain);
                   }
                 }
               }}
