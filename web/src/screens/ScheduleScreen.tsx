@@ -3,7 +3,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
-import { buildMonthGrid, getMonthLabel, toLocalIsoMonth } from "@/shared/utils/date";
+import {
+  buildMonthGrid,
+  getMonthLabel,
+  normalizeTimeInput,
+  toLocalIsoMonth,
+} from "@/shared/utils/date";
 import {
   generateScheduleMessage,
   getSelectedDays,
@@ -47,7 +52,12 @@ const ScheduleScreen = () => {
   };
 
   const strikeTimesOnly = (value: string) =>
-    value.replace(/\b\d{1,2}[.:]\d{2}\b/g, (match) => `~~${match}~~`);
+    value.replace(/\b\d{1,2}[.:]\d{2}\b/g, (match) =>
+      normalizeTimeInput(match)
+        .split("")
+        .map((char) => `${char}\u0336`)
+        .join(""),
+    );
 
   return (
     <div className="space-y-4">
@@ -125,9 +135,10 @@ const ScheduleScreen = () => {
                   message
                     .map((line) =>
                       line
-                        .replace(/<s>(.*?)<\/s>/g, (_, text) => strikeTimesOnly(text))
+                        .replace(/<s>(.*?)<\/s>/g, (_, text) => ` ${strikeTimesOnly(text)} `)
                         .replace(/<\/?s>/g, ""),
                     )
+                    .map((line) => line.replace(/\s+/g, " ").trim())
                     .join("\n"),
                 )
                   .then(() =>
