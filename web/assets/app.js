@@ -21,6 +21,16 @@ const apiFetch = async (path, options = {}) => {
 };
 
 const formatDateISO = (date) => date.toISOString().slice(0, 10);
+const formatDateDisplay = (value) => {
+  if (!value) return "";
+  const parts = value.split("-");
+  if (parts.length === 3) {
+    const [year, month, day] = parts;
+    const yy = year.slice(-2);
+    return `${day}-${month}-${yy}`;
+  }
+  return value;
+};
 const parseMonthInput = (value) => {
   const [year, month] = value.split("-").map(Number);
   return { year, month };
@@ -61,7 +71,7 @@ const renderClients = (container, clients) => {
       (client) => `
         <div class="list-item">
           <div class="list-title">${client.name}</div>
-          <div class="list-meta">Дата: ${client.date} • Время: ${client.time}</div>
+          <div class="list-meta">Дата: ${formatDateDisplay(client.date)} • Время: ${client.time}</div>
           <div class="list-meta">Ссылка: ${client.link || "-"}</div>
           <div class="list-meta">Предоплата: ${client.prepayment_display}</div>
         </div>
@@ -80,7 +90,7 @@ const renderDayClients = (container, clients, onEdit, onDelete) => {
       (client) => `
         <div class="list-item" data-client-id="${client.id}">
           <div class="list-title">${client.name}</div>
-          <div class="list-meta">Дата: ${client.date} • Время: ${client.time}</div>
+          <div class="list-meta">Дата: ${formatDateDisplay(client.date)} • Время: ${client.time}</div>
           <div class="list-meta">Ссылка: ${client.link || "-"}</div>
           <div class="list-meta">Предоплата: ${client.prepayment_display}</div>
           <div class="list-actions">
