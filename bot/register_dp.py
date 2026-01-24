@@ -7,6 +7,7 @@ from handlers.salary import register_salary
 from handlers.expenses import register_expenses
 from handlers.calendar import register_calendar
 from handlers.schedule import register_schedule
+from handlers.webapp_data import register_webapp_handlers
 
 def register(dp):
     register_start_handlers(dp)
@@ -18,3 +19,4 @@ def register(dp):
     register_expenses(dp)
     register_calendar(dp)
     register_schedule(dp)
+    register_webapp_handlers(dp)

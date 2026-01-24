@@ -22,6 +22,7 @@ declare global {
     BackButton: TelegramWebAppBackButton;
     ready: () => void;
     expand: () => void;
+    sendData: (data: string) => void;
     onEvent: (event: string, handler: () => void) => void;
     offEvent: (event: string, handler: () => void) => void;
   }
