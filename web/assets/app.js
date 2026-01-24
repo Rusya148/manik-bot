@@ -72,10 +72,43 @@ const renderClients = (container, clients) => {
           <div class="list-meta">Дата: ${formatDateDisplay(client.date)} • Время: ${client.time}</div>
           <div class="list-meta">Ссылка: ${client.link || "-"}</div>
           <div class="list-meta">Предоплата: ${client.prepayment_display}</div>
+          ${
+            client.link && client.link.trim().startsWith("@")
+              ? `<div class="list-actions">
+                   <button type="button" class="action-button" data-action="copy" data-copy="${client.link.trim()}">
+                     Копировать @
+                   </button>
+                 </div>`
+              : ""
+          }
         </div>
       `
     )
     .join("");
+
+  container.querySelectorAll("[data-action='copy']").forEach((button) => {
+    button.addEventListener("click", async () => {
+      const value = button.dataset.copy || "";
+      if (!value) return;
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(value);
+        } else {
+          const temp = document.createElement("textarea");
+          temp.value = value;
+          temp.style.position = "fixed";
+          temp.style.left = "-9999px";
+          document.body.appendChild(temp);
+          temp.select();
+          document.execCommand("copy");
+          document.body.removeChild(temp);
+        }
+        showToast("Ссылка скопирована");
+      } catch (error) {
+        showToast("Не удалось скопировать", true);
+      }
+    });
+  });
 };
 
 const renderDayClients = (container, clients, onEdit, onDelete) => {
@@ -94,6 +127,11 @@ const renderDayClients = (container, clients, onEdit, onDelete) => {
           <div class="list-actions">
             <button type="button" class="action-button" data-action="edit">Редактировать</button>
             <button type="button" class="action-button danger" data-action="delete">Удалить</button>
+            ${
+              client.link && client.link.trim().startsWith("@")
+                ? `<button type="button" class="action-button" data-action="copy">Копировать @</button>`
+                : ""
+            }
           </div>
         </div>
       `
@@ -106,6 +144,30 @@ const renderDayClients = (container, clients, onEdit, onDelete) => {
     if (!client) return;
     item.querySelector("[data-action='edit']").addEventListener("click", () => onEdit(client));
     item.querySelector("[data-action='delete']").addEventListener("click", () => onDelete(client));
+    const copyButton = item.querySelector("[data-action='copy']");
+    if (copyButton) {
+      copyButton.addEventListener("click", async () => {
+        const value = (client.link || "").trim();
+        if (!value) return;
+        try {
+          if (navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(value);
+          } else {
+            const temp = document.createElement("textarea");
+            temp.value = value;
+            temp.style.position = "fixed";
+            temp.style.left = "-9999px";
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand("copy");
+            document.body.removeChild(temp);
+          }
+          showToast("Ссылка скопирована");
+        } catch (error) {
+          showToast("Не удалось скопировать", true);
+        }
+      });
+    }
   });
 };
 
@@ -527,6 +589,18 @@ const setupSchedule = () => {
         month,
         [],
         async (day, _iso, cell) => {
+          const dateIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+          try {
+            const booked = await apiFetch(`/clients/day?date_iso=${dateIso}`);
+            if (booked.length) {
+              const info = booked
+                .map((client) => `${client.name} (${client.time})`)
+                .join(", ");
+              showToast(`Есть записи: ${info}`);
+            }
+          } catch (error) {
+            showToast(error.message, true);
+          }
           try {
             if (cell) {
               cell.classList.toggle("selected");
