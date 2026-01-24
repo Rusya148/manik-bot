@@ -11,6 +11,8 @@ import {
   buildTimeSlots,
   formatDateTitle,
   getMonthLabel,
+  toLocalIsoDate,
+  toLocalIsoMonth,
 } from "@/shared/utils/date";
 import { Timeline } from "@/features/calendar/Timeline";
 import { Booking } from "@/types/domain";
@@ -90,7 +92,7 @@ const CalendarScreen = () => {
         <Button className="flex-1" onClick={() => openBooking()}>
           Новая запись
         </Button>
-        <Button variant="secondary" onClick={() => setSelectedDate(new Date().toISOString().slice(0, 10))}>
+        <Button variant="secondary" onClick={() => setSelectedDate(toLocalIsoDate(new Date()))}>
           Сегодня
         </Button>
       </div>
@@ -103,7 +105,7 @@ const CalendarScreen = () => {
               variant="secondary"
               onClick={() => {
                 const date = new Date(year, monthIndex - 1, 1);
-                setCursor(date.toISOString().slice(0, 7));
+                setCursor(toLocalIsoMonth(date));
               }}
             >
               ←
@@ -112,7 +114,7 @@ const CalendarScreen = () => {
               variant="secondary"
               onClick={() => {
                 const date = new Date(year, monthIndex + 1, 1);
-                setCursor(date.toISOString().slice(0, 7));
+                setCursor(toLocalIsoMonth(date));
               }}
             >
               →

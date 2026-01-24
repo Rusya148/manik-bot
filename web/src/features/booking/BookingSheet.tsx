@@ -10,6 +10,7 @@ import { Input } from "@/shared/ui/Input";
 import { Textarea } from "@/shared/ui/Textarea";
 import { Button } from "@/shared/ui/Button";
 import { createClient, getClientsByDay, getClientsByRange, updateClient } from "@/services/api/clients";
+import { toLocalIsoDate } from "@/shared/utils/date";
 
 type Props = {
   open: boolean;
@@ -20,7 +21,7 @@ const getRange = () => {
   const end = new Date();
   const start = new Date();
   start.setDate(end.getDate() - 365);
-  return { start: start.toISOString().slice(0, 10), end: end.toISOString().slice(0, 10) };
+  return { start: toLocalIsoDate(start), end: toLocalIsoDate(end) };
 };
 
 const roundTime = (base: string | null, step: number) => {

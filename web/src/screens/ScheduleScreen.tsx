@@ -4,7 +4,7 @@ import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { Input } from "@/shared/ui/Input";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
-import { buildMonthGrid, getMonthLabel } from "@/shared/utils/date";
+import { buildMonthGrid, getMonthLabel, toLocalIsoMonth } from "@/shared/utils/date";
 import {
   generateScheduleMessage,
   getScheduleSlots,
@@ -18,7 +18,7 @@ const weekdayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 const ScheduleScreen = () => {
   const queryClient = useQueryClient();
-  const [cursor, setCursor] = useState(() => new Date().toISOString().slice(0, 7));
+  const [cursor, setCursor] = useState(() => toLocalIsoMonth(new Date()));
   const [message, setMessage] = useState<string[]>([]);
 
   const [year, month] = cursor.split("-").map(Number);
@@ -69,7 +69,7 @@ const ScheduleScreen = () => {
 
   const goMonth = (delta: number) => {
     const date = new Date(year, monthIndex + delta, 1);
-    setCursor(date.toISOString().slice(0, 7));
+    setCursor(toLocalIsoMonth(date));
   };
 
   return (

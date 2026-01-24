@@ -6,15 +6,15 @@ import { useBookingMetaStore, buildBookingKey } from "@/stores/useBookingMetaSto
 import { SectionTitle } from "@/shared/ui/SectionTitle";
 import { Input } from "@/shared/ui/Input";
 import { Card } from "@/shared/ui/Card";
-import { formatDayShort } from "@/shared/utils/date";
+import { formatDayShort, toLocalIsoDate } from "@/shared/utils/date";
 
 const getRange = () => {
   const end = new Date();
   const start = new Date();
   start.setDate(end.getDate() - 365);
   return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
+    start: toLocalIsoDate(start),
+    end: toLocalIsoDate(end),
   };
 };
 

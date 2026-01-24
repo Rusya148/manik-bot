@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { ScreenKey } from "@/types/domain";
+import { toLocalIsoDate } from "@/shared/utils/date";
 
 type AppState = {
   activeScreen: ScreenKey;
@@ -13,7 +14,7 @@ type AppState = {
   closeBooking: () => void;
 };
 
-const todayIso = () => new Date().toISOString().slice(0, 10);
+const todayIso = () => toLocalIsoDate(new Date());
 
 export const useAppStore = create<AppState>((set) => ({
   activeScreen: "calendar",

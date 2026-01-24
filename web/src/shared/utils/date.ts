@@ -13,10 +13,23 @@ export const formatDayShort = (isoDate: string) =>
     month: "2-digit",
   }).format(new Date(`${isoDate}T00:00:00`));
 
+export const toLocalIsoDate = (date: Date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+export const toLocalIsoMonth = (date: Date) => {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  return `${yyyy}-${mm}`;
+};
+
 export const addDays = (isoDate: string, delta: number) => {
   const date = new Date(`${isoDate}T00:00:00`);
   date.setDate(date.getDate() + delta);
-  return date.toISOString().slice(0, 10);
+  return toLocalIsoDate(date);
 };
 
 export const buildTimeSlots = (start: string, end: string, step: number) => {
@@ -47,7 +60,7 @@ export const getWeekDays = (isoDate: string) => {
   return Array.from({ length: 7 }).map((_, idx) => {
     const current = new Date(start);
     current.setDate(start.getDate() + idx);
-    return current.toISOString().slice(0, 10);
+    return toLocalIsoDate(current);
   });
 };
 
@@ -67,7 +80,7 @@ export const buildMonthGrid = (year: number, monthIndex: number) => {
     grid.push(null);
   }
   for (let day = 1; day <= totalDays; day += 1) {
-    const iso = new Date(year, monthIndex, day).toISOString().slice(0, 10);
+    const iso = toLocalIsoDate(new Date(year, monthIndex, day));
     grid.push({ day, iso });
   }
   while (grid.length % 7 !== 0) {
