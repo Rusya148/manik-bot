@@ -129,7 +129,7 @@ const renderCalendar = (container, year, month, markedDays, onDayClick, selected
     const cell = document.createElement("button");
     cell.type = "button";
     cell.className = "calendar-cell";
-    if (i < startWeekday) {
+    if (i < startWeekday || i >= startWeekday + totalDays) {
       cell.disabled = true;
       cell.classList.add("empty");
     } else {
