@@ -171,22 +171,36 @@ const CalendarScreen = () => {
         <div className="text-sm font-semibold">Записи на выбранный день</div>
         {bookings.length ? (
           <div className="space-y-2 text-sm">
-            <div className="grid grid-cols-[68px_1fr_1fr_52px] gap-2 text-xs text-hint">
-              <div>Время</div>
-              <div>Имя</div>
-              <div>Ссылка</div>
+            <div className="grid grid-cols-[72px_1fr_1fr_64px] gap-2 text-xs text-hint">
+              <div className="text-left">Время</div>
+              <div className="text-left">Имя</div>
+              <div className="text-left">Ссылка</div>
               <div className="text-right">Предоплата</div>
             </div>
             {bookings.map((booking) => (
               <button
                 key={`${booking.id}-${booking.time}`}
-                className="grid w-full grid-cols-[68px_1fr_1fr_52px] items-center gap-2 rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-left"
+                className="grid w-full grid-cols-[72px_1fr_1fr_64px] items-center gap-2 rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-left"
                 onClick={() => openBooking({ bookingId: booking.id })}
               >
                 <span className="font-medium">{booking.time}</span>
                 <span className="truncate text-xs text-hint">{booking.name}</span>
                 <span className="truncate text-xs text-hint">
-                  {booking.link?.startsWith("@") ? booking.link : "—"}
+                  {booking.link?.startsWith("@") ? (
+                    <button
+                      type="button"
+                      className="inline-flex max-w-full items-center gap-1 text-accent"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigator.clipboard?.writeText(booking.link);
+                      }}
+                    >
+                      <span className="truncate">{booking.link}</span>
+                      <span className="text-[11px]">Копировать</span>
+                    </button>
+                  ) : (
+                    "—"
+                  )}
                 </span>
                 <span className="text-right text-xs text-[color:var(--app-accent)]">
                   {booking.prepaymentDisplay ?? "✗"}
