@@ -6,7 +6,13 @@ import { useSettingsStore } from "@/stores/useSettingsStore";
 import { BottomSheet } from "@/shared/ui/BottomSheet";
 import { Input } from "@/shared/ui/Input";
 import { Button } from "@/shared/ui/Button";
-import { createClient, getClientsByDay, getClientsByRange, updateClient } from "@/services/api/clients";
+import {
+  createClient,
+  deleteClient,
+  getClientsByDay,
+  getClientsByRange,
+  updateClient,
+} from "@/services/api/clients";
 import { normalizeTimeInput, toLocalIsoDate } from "@/shared/utils/date";
 
 type Props = {
@@ -30,6 +36,15 @@ const roundTime = (base: string | null, step: number) => {
   const hh = Math.floor(rounded / 60);
   const mm = rounded % 60;
   return `${hh.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}`;
+};
+
+const formatTimeTyping = (value: string) => {
+  const digits = value.replace(/\D/g, "");
+  if (digits.length === 0) return "";
+  if (digits.length <= 2) return digits;
+  const hh = digits.slice(0, digits.length - 2);
+  const mm = digits.slice(-2);
+  return `${hh}:${mm}`;
 };
 
 const BookingSheet = ({ open, onClose }: Props) => {
@@ -113,6 +128,17 @@ const BookingSheet = ({ open, onClose }: Props) => {
     },
   });
 
+  const deleteMutation = useMutation({
+    mutationFn: async () => {
+      if (!editing) return { status: "ok" as const };
+      return deleteClient(editing.id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["clients"] });
+      onClose();
+    },
+  });
+
   const handleSubmit = useCallback(() => {
     if (!form.name.trim() || !form.link.trim() || !form.time.trim()) return;
     mutation.mutate();
@@ -169,7 +195,12 @@ const BookingSheet = ({ open, onClose }: Props) => {
               type="text"
               inputMode="numeric"
               value={form.time}
-              onChange={(event) => setForm((prev) => ({ ...prev, time: event.target.value }))}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...prev,
+                  time: formatTimeTyping(event.target.value),
+                }))
+              }
               onBlur={(event) =>
                 setForm((prev) => ({ ...prev, time: normalizeTimeInput(event.target.value) }))
               }
@@ -233,6 +264,15 @@ const BookingSheet = ({ open, onClose }: Props) => {
         <Button onClick={handleSubmit} disabled={mutation.isPending}>
           {editing ? "Сохранить" : "Создать"}
         </Button>
+        {editing && (
+          <Button
+            variant="secondary"
+            onClick={() => deleteMutation.mutate()}
+            disabled={deleteMutation.isPending}
+          >
+            Удалить запись
+          </Button>
+        )}
       </div>
     </BottomSheet>
   );
