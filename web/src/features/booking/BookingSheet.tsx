@@ -13,7 +13,7 @@ import {
   getClientsByRange,
   updateClient,
 } from "@/services/api/clients";
-import { normalizeTimeInput, toLocalIsoDate } from "@/shared/utils/date";
+import { toLocalIsoDate } from "@/shared/utils/date";
 
 type Props = {
   open: boolean;
@@ -36,15 +36,6 @@ const roundTime = (base: string | null, step: number) => {
   const hh = Math.floor(rounded / 60);
   const mm = rounded % 60;
   return `${hh.toString().padStart(2, "0")}:${mm.toString().padStart(2, "0")}`;
-};
-
-const formatTimeTyping = (value: string) => {
-  const digits = value.replace(/\D/g, "");
-  if (digits.length === 0) return "";
-  if (digits.length <= 2) return digits;
-  const hh = digits.slice(0, digits.length - 2);
-  const mm = digits.slice(-2);
-  return `${hh}:${mm}`;
 };
 
 const BookingSheet = ({ open, onClose }: Props) => {
@@ -81,6 +72,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
     prepayment: "",
     prepaymentEnabled: false,
   });
+  const [timeError, setTimeError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -141,8 +133,9 @@ const BookingSheet = ({ open, onClose }: Props) => {
 
   const handleSubmit = useCallback(() => {
     if (!form.name.trim() || !form.link.trim() || !form.time.trim()) return;
+    if (timeError || form.time.length !== 5) return;
     mutation.mutate();
-  }, [form.name, form.link, form.time, mutation]);
+  }, [form.name, form.link, form.time, mutation, timeError]);
 
   useEffect(() => {
     if (!open || !webApp) return;
@@ -195,18 +188,36 @@ const BookingSheet = ({ open, onClose }: Props) => {
               type="text"
               inputMode="numeric"
               value={form.time}
-              onChange={(event) =>
-                setForm((prev) => ({
-                  ...prev,
-                  time: formatTimeTyping(event.target.value),
-                }))
-              }
-              onBlur={(event) =>
-                setForm((prev) => ({ ...prev, time: normalizeTimeInput(event.target.value) }))
-              }
+              onChange={(event) => {
+                const raw = event.target.value;
+                if (/[^0-9:]/.test(raw)) {
+                  setTimeError("Допустим только формат HH:MM.");
+                  return;
+                }
+                let next = raw;
+                if (!next.includes(":") && next.length > 2) {
+                  next = `${next.slice(0, 2)}:${next.slice(2, 4)}`;
+                }
+                if (next.length > 5) {
+                  next = next.slice(0, 5);
+                }
+                setForm((prev) => ({ ...prev, time: next }));
+                if (next.length < 5) {
+                  setTimeError(null);
+                  return;
+                }
+                setTimeError(
+                  /^([01]\d|2[0-3]):[0-5]\d$/.test(next)
+                    ? null
+                    : "Время должно быть в формате HH:MM.",
+                );
+              }}
               placeholder="10:00"
             />
-            <div className="mt-1 text-xs text-hint">Время начала услуги.</div>
+            <div className="mt-1 text-xs text-hint">
+              Формат строго HH:MM, например 10:00.
+            </div>
+            {timeError && <div className="mt-1 text-xs text-[color:#d9534f]">{timeError}</div>}
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -261,7 +272,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
             Сумма необязательна — можно оставить пустым.
           </div>
         </div>
-        <Button onClick={handleSubmit} disabled={mutation.isPending}>
+        <Button onClick={handleSubmit} disabled={mutation.isPending || Boolean(timeError)}>
           {editing ? "Сохранить" : "Создать"}
         </Button>
         {editing && (

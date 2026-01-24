@@ -106,20 +106,6 @@ const ClientsScreen = () => {
                   Открыть
                 </button>
               </div>
-              <div className="text-xs text-hint">История</div>
-              <div className="flex flex-wrap gap-2 text-xs">
-                {client.visits.slice(0, 4).map((visit) => {
-                  const [date, time] = visit.split(" ");
-                  return (
-                    <span
-                      key={visit}
-                      className="rounded-full bg-[color:var(--app-bg)] px-2 py-1"
-                    >
-                      {formatDayShort(date)} · {time}
-                    </span>
-                  );
-                })}
-              </div>
             </Card>
           ))}
           {!filtered.length && (
@@ -139,19 +125,21 @@ const ClientsScreen = () => {
               <div className="text-sm font-semibold">{historyClient.name}</div>
               <div className="text-xs text-hint">{historyClient.link}</div>
             </div>
-            <div className="space-y-2">
-              {historyClient.visits.map((visit) => {
-                const [date, time] = visit.split(" ");
-                return (
-                  <div
-                    key={visit}
-                    className="flex items-center justify-between rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-sm"
-                  >
-                    <span>{formatDayShort(date)}</span>
-                    <span className="font-medium">{time}</span>
-                  </div>
-                );
-              })}
+            <div className="max-h-[55vh] overflow-y-auto pr-1">
+              <div className="space-y-2">
+                {historyClient.visits.map((visit) => {
+                  const [date, time] = visit.split(" ");
+                  return (
+                    <div
+                      key={visit}
+                      className="flex items-center justify-between rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-sm"
+                    >
+                      <span>{formatDayShort(date)}</span>
+                      <span className="font-medium">{time}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         ) : (
