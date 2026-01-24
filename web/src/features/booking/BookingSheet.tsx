@@ -83,7 +83,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
         time: editing.time,
         name: editing.name,
         link: editing.link,
-        prepayment: editing.prepayment ? String(editing.prepayment) : "",
+        prepayment: editing.prepayment && editing.prepayment > 1 ? String(editing.prepayment) : "",
         prepaymentEnabled: Boolean(editing.prepayment),
       });
       setNameTouched(false);

@@ -177,7 +177,12 @@ const CalendarScreen = () => {
               onClick={() => openBooking({ bookingId: booking.id })}
             >
               <span className="font-medium">{booking.time}</span>
-              <span className="text-xs text-hint">{booking.name}</span>
+              <span className="flex items-center gap-2 text-xs text-hint">
+                <span>{booking.link?.startsWith("@") ? booking.link : booking.name}</span>
+                <span className="text-[color:var(--app-accent)]">
+                  {booking.prepaymentDisplay ?? "✗"}
+                </span>
+              </span>
             </button>
           ))
         ) : (
