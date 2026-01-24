@@ -174,6 +174,17 @@ def remove_last_expenses_from_db(month_year):
     except sqlite3.Error as e:
         print(f"Ошибка при удалении последней траты: {e}")
 
+
+def count_visits_by_link(link: str) -> int:
+    try:
+        with sqlite3.connect('database_client.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute('SELECT COUNT(*) FROM clients WHERE link = ?', (link,))
+            return int(cursor.fetchone()[0] or 0)
+    except sqlite3.Error as e:
+        print(f"Ошибка при подсчете посещений: {e}")
+        return 0
+
 create_clients_table()
 migrate_clients_add_prepayment()
 create_salary_table()

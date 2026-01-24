@@ -762,96 +762,29 @@ const setupSchedule = () => {
   loadMonth();
 };
 
-const setupSalary = () => {
-  const monthInput = document.getElementById("salary-month");
-  const amountInput = document.getElementById("salary-amount");
-  const addButton = document.getElementById("salary-add");
-  const removeButton = document.getElementById("salary-remove");
-  const total = document.getElementById("salary-total");
+const setupVisits = () => {
+  const linkInput = document.getElementById("visits-link");
+  const countButton = document.getElementById("visits-count");
+  const result = document.getElementById("visits-result");
+  if (!linkInput || !countButton || !result) return;
 
-  const loadTotal = async () => {
-    if (!monthInput.value) return;
-    const data = await apiFetch(`/salary?month=${monthInput.value}`);
-    total.textContent = `Зарплата за ${data.month}: ${data.total} руб.`;
+  const renderResult = (link, count) => {
+    result.textContent = `Посещений для ${link}: ${count}`;
   };
 
-  addButton.addEventListener("click", async () => {
-    if (!monthInput.value || !amountInput.value) {
-      showToast("Введите месяц и сумму", true);
+  countButton.addEventListener("click", async () => {
+    const link = (linkInput.value || "").trim();
+    if (!link) {
+      showToast("Введите ссылку клиента", true);
       return;
     }
     try {
-      const payload = { amount: Number(amountInput.value), month: monthInput.value };
-      await apiFetch("/salary", { method: "POST", body: JSON.stringify(payload) });
-      showToast("Сумма добавлена");
-      amountInput.value = "";
-      loadTotal();
+      const data = await apiFetch(`/visits?link=${encodeURIComponent(link)}`);
+      renderResult(data.link, data.count);
     } catch (error) {
       showToast(error.message, true);
     }
   });
-
-  removeButton.addEventListener("click", async () => {
-    if (!monthInput.value) {
-      showToast("Выберите месяц", true);
-      return;
-    }
-    try {
-      await apiFetch(`/salary/last?month=${monthInput.value}`, { method: "DELETE" });
-      showToast("Последняя сумма удалена");
-      loadTotal();
-    } catch (error) {
-      showToast(error.message, true);
-    }
-  });
-
-  monthInput.addEventListener("change", loadTotal);
-};
-
-const setupExpenses = () => {
-  const monthInput = document.getElementById("expenses-month");
-  const amountInput = document.getElementById("expenses-amount");
-  const addButton = document.getElementById("expenses-add");
-  const removeButton = document.getElementById("expenses-remove");
-  const total = document.getElementById("expenses-total");
-
-  const loadTotal = async () => {
-    if (!monthInput.value) return;
-    const data = await apiFetch(`/expenses?month=${monthInput.value}`);
-    total.textContent = `Траты за ${data.month}: ${data.total} руб.`;
-  };
-
-  addButton.addEventListener("click", async () => {
-    if (!monthInput.value || !amountInput.value) {
-      showToast("Введите месяц и сумму", true);
-      return;
-    }
-    try {
-      const payload = { amount: Number(amountInput.value), month: monthInput.value };
-      await apiFetch("/expenses", { method: "POST", body: JSON.stringify(payload) });
-      showToast("Сумма добавлена");
-      amountInput.value = "";
-      loadTotal();
-    } catch (error) {
-      showToast(error.message, true);
-    }
-  });
-
-  removeButton.addEventListener("click", async () => {
-    if (!monthInput.value) {
-      showToast("Выберите месяц", true);
-      return;
-    }
-    try {
-      await apiFetch(`/expenses/last?month=${monthInput.value}`, { method: "DELETE" });
-      showToast("Последняя сумма удалена");
-      loadTotal();
-    } catch (error) {
-      showToast(error.message, true);
-    }
-  });
-
-  monthInput.addEventListener("change", loadTotal);
 };
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -859,6 +792,5 @@ document.addEventListener("DOMContentLoaded", () => {
   setupClients();
   setupCalendar();
   setupSchedule();
-  setupSalary();
-  setupExpenses();
+  setupVisits();
 });

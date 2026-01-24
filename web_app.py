@@ -11,6 +11,7 @@ from pydantic import BaseModel
 from database.database import (
     add_expenses_to_db,
     add_salary_to_db,
+    count_visits_by_link,
     delete_client_by_id,
     get_total_expenses_for_month,
     get_total_salary_for_month,
@@ -288,6 +289,11 @@ def expenses_add(payload: ExpensesCreate):
 def expenses_remove_last(month: str = Query(..., description="YYYY-MM")):
     remove_last_expenses_from_db(month)
     return {"status": "ok", "total": get_total_expenses_for_month(month)}
+
+
+@app.get("/api/visits")
+def visits_count(link: str = Query(..., min_length=1)):
+    return {"link": link, "count": count_visits_by_link(link)}
 
 
 @app.get("/api/schedule/selected")

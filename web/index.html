@@ -12,8 +12,7 @@
     <button class="tab-button active" data-tab="clients">Клиенты</button>
     <button class="tab-button" data-tab="calendar">Календарь</button>
     <button class="tab-button" data-tab="schedule">Расписание</button>
-    <button class="tab-button" data-tab="salary">Зарплата</button>
-    <button class="tab-button" data-tab="expenses">Траты</button>
+    <button class="tab-button" data-tab="visits">Посещения</button>
   </nav>
 
   <main class="tabs-content">
@@ -164,26 +163,13 @@
       <div id="schedule-result" class="card list-block"></div>
     </section>
 
-    <section id="tab-salary" class="tab-panel">
-      <h2>Зарплата</h2>
+    <section id="tab-visits" class="tab-panel">
+      <h2>Подсчет посещений</h2>
       <div class="card form-inline">
-        <input type="month" id="salary-month" />
-        <input type="number" id="salary-amount" min="1" step="1" placeholder="Сумма" />
-        <button id="salary-add">Добавить</button>
-        <button id="salary-remove">Удалить последнюю</button>
+        <input type="text" id="visits-link" placeholder="@example" />
+        <button id="visits-count">Подсчитать</button>
       </div>
-      <div id="salary-total" class="card list-block"></div>
-    </section>
-
-    <section id="tab-expenses" class="tab-panel">
-      <h2>Траты</h2>
-      <div class="card form-inline">
-        <input type="month" id="expenses-month" />
-        <input type="number" id="expenses-amount" min="1" step="1" placeholder="Сумма" />
-        <button id="expenses-add">Добавить</button>
-        <button id="expenses-remove">Удалить последнюю</button>
-      </div>
-      <div id="expenses-total" class="card list-block"></div>
+      <div id="visits-result" class="card list-block"></div>
     </section>
   </main>
 
