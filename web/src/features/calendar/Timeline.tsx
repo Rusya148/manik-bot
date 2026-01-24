@@ -1,5 +1,6 @@
 import clsx from "clsx";
 import { Booking } from "@/types/domain";
+import { normalizeTimeInput } from "@/shared/utils/date";
 
 type Props = {
   slots: string[];
@@ -9,11 +10,18 @@ type Props = {
 };
 
 export const Timeline = ({ slots, bookings, onSlotClick, onBookingClick }: Props) => {
-  const bookingByTime = new Map(bookings.map((b) => [b.time, b]));
+  const normalizedBookings = bookings.map((booking) => ({
+    ...booking,
+    time: normalizeTimeInput(booking.time),
+  }));
+  const bookingByTime = new Map(normalizedBookings.map((b) => [b.time, b]));
+  const allTimes = Array.from(
+    new Set([...slots, ...normalizedBookings.map((booking) => booking.time)]),
+  ).sort((a, b) => a.localeCompare(b));
 
   return (
     <div className="card divide-y divide-[color:var(--app-border)]">
-      {slots.map((time) => {
+      {allTimes.map((time) => {
         const booking = bookingByTime.get(time);
         return (
           <button

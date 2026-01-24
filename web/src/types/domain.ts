@@ -1,4 +1,4 @@
-export type ScreenKey = "calendar" | "schedule" | "clients" | "services" | "settings";
+export type ScreenKey = "calendar" | "schedule" | "clients" | "settings";
 
 export type Booking = {
   id: number;
@@ -10,16 +10,7 @@ export type Booking = {
 };
 
 export type BookingMeta = {
-  serviceId?: string;
-  durationMinutes?: number;
   comment?: string;
-};
-
-export type ServiceItem = {
-  id: string;
-  title: string;
-  durationMinutes: number;
-  price?: number;
 };
 
 export type Settings = {

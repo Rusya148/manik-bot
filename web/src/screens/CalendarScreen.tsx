@@ -114,7 +114,9 @@ const CalendarScreen = () => {
               variant="secondary"
               onClick={() => {
                 const date = new Date(year, monthIndex - 1, 1);
-                setCursor(toLocalIsoMonth(date));
+                const nextCursor = toLocalIsoMonth(date);
+                setCursor(nextCursor);
+                setSelectedDate(`${nextCursor}-01`);
               }}
             >
               ←
@@ -123,7 +125,9 @@ const CalendarScreen = () => {
               variant="secondary"
               onClick={() => {
                 const date = new Date(year, monthIndex + 1, 1);
-                setCursor(toLocalIsoMonth(date));
+                const nextCursor = toLocalIsoMonth(date);
+                setCursor(nextCursor);
+                setSelectedDate(`${nextCursor}-01`);
               }}
             >
               →
@@ -160,6 +164,24 @@ const CalendarScreen = () => {
         </div>
         {!!todayClients?.length && (
           <div className="text-xs text-accent">Сегодня есть записи.</div>
+        )}
+      </div>
+
+      <div className="card p-4 space-y-2">
+        <div className="text-sm font-semibold">Записи на выбранный день</div>
+        {bookings.length ? (
+          bookings.map((booking) => (
+            <button
+              key={`${booking.id}-${booking.time}`}
+              className="flex w-full items-center justify-between rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-left text-sm"
+              onClick={() => openBooking({ bookingId: booking.id })}
+            >
+              <span className="font-medium">{booking.time}</span>
+              <span className="text-xs text-hint">{booking.name}</span>
+            </button>
+          ))
+        ) : (
+          <div className="text-xs text-hint">Записей нет.</div>
         )}
       </div>
 

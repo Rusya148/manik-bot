@@ -4,7 +4,6 @@ import { TabBar } from "@/shared/ui/TabBar";
 import CalendarScreen from "@/screens/CalendarScreen";
 import ScheduleScreen from "@/screens/ScheduleScreen";
 import ClientsScreen from "@/screens/ClientsScreen";
-import ServicesScreen from "@/screens/ServicesScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import BookingSheet from "@/features/booking/BookingSheet";
 
@@ -20,7 +19,6 @@ const App = () => {
       {activeScreen === "calendar" && <CalendarScreen />}
       {activeScreen === "schedule" && <ScheduleScreen />}
       {activeScreen === "clients" && <ClientsScreen />}
-      {activeScreen === "services" && <ServicesScreen />}
       {activeScreen === "settings" && <SettingsScreen />}
 
       <BookingSheet open={bookingOpen} onClose={closeBooking} />

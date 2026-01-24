@@ -1,8 +1,8 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getClientsByRange } from "@/services/api/clients";
-import { useAppStore } from "@/stores/useAppStore";
 import { useBookingMetaStore, buildBookingKey } from "@/stores/useBookingMetaStore";
+import { BottomSheet } from "@/shared/ui/BottomSheet";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
 import { Input } from "@/shared/ui/Input";
 import { Card } from "@/shared/ui/Card";
@@ -18,10 +18,18 @@ const getRange = () => {
   };
 };
 
+type ClientGroup = {
+  name: string;
+  link: string;
+  visits: string[];
+  ids: number[];
+  note: string;
+};
+
 const ClientsScreen = () => {
   const [search, setSearch] = useState("");
-  const setSelectedDate = useAppStore((state) => state.setSelectedDate);
-  const openBooking = useAppStore((state) => state.openBooking);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyClient, setHistoryClient] = useState<ClientGroup | null>(null);
   const metaByKey = useBookingMetaStore((state) => state.metaByKey);
   const range = useMemo(getRange, []);
 
@@ -92,16 +100,13 @@ const ClientsScreen = () => {
                 <div>
                   <div className="text-sm font-semibold">{client.name}</div>
                   <div className="text-xs text-hint">{client.link}</div>
+                  <div className="text-xs text-hint">Посещений: {client.visits.length}</div>
                 </div>
                 <button
                   className="rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-xs text-accent"
                   onClick={() => {
-                    const latest = client.visits[0];
-                    if (!latest) return;
-                    const [date] = latest.split(" ");
-                    setSelectedDate(date);
-                    const id = client.ids[0];
-                    if (id) openBooking({ bookingId: id });
+                    setHistoryClient(client);
+                    setHistoryOpen(true);
                   }}
                 >
                   Открыть
@@ -133,6 +138,37 @@ const ClientsScreen = () => {
           )}
         </div>
       )}
+
+      <BottomSheet
+        open={historyOpen}
+        onClose={() => setHistoryOpen(false)}
+        title="История записей"
+      >
+        {historyClient ? (
+          <div className="space-y-3">
+            <div>
+              <div className="text-sm font-semibold">{historyClient.name}</div>
+              <div className="text-xs text-hint">{historyClient.link}</div>
+            </div>
+            <div className="space-y-2">
+              {historyClient.visits.map((visit) => {
+                const [date, time] = visit.split(" ");
+                return (
+                  <div
+                    key={visit}
+                    className="flex items-center justify-between rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-sm"
+                  >
+                    <span>{formatDayShort(date)}</span>
+                    <span className="font-medium">{time}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="text-xs text-hint">Нет данных.</div>
+        )}
+      </BottomSheet>
     </div>
   );
 };
