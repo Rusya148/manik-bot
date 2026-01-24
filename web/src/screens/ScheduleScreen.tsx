@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
-import { useTelegram } from "@/hooks/useTelegram";
 import {
   buildMonthGrid,
   getMonthLabel,
@@ -20,7 +19,6 @@ const weekdayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 const ScheduleScreen = () => {
   const queryClient = useQueryClient();
-  const { webApp } = useTelegram();
   const [cursor, setCursor] = useState(() => toLocalIsoMonth(new Date()));
   const [message, setMessage] = useState<string[]>([]);
   const messageRef = useRef<HTMLDivElement | null>(null);
@@ -57,11 +55,12 @@ const ScheduleScreen = () => {
   const normalizeTimesInText = (value: string) =>
     value.replace(/\b\d{1,2}[.:]\d{2}\b/g, (match) => normalizeTimeInput(match));
 
-  const buildHtmlMessage = () =>
+  const buildPlainMessage = () =>
     message
       .map((line) =>
         line
-          .replace(/<s>(.*?)<\/s>/g, (_, text) => `<s>${normalizeTimesInText(text)}</s>`)
+          .replace(/<s>(.*?)<\/s>/g, (_, text) => normalizeTimesInText(text))
+          .replace(/<\/?s>/g, "")
           .replace(/\s+/g, " ")
           .trim(),
       )
@@ -141,21 +140,30 @@ const ScheduleScreen = () => {
             <button
               className="select-none text-xs text-accent"
               onClick={() => {
-                const html = buildHtmlMessage();
-                const text = html.replace(/<\/?s>/g, "");
-                if (webApp?.sendData) {
-                  webApp.sendData(JSON.stringify({ type: "schedule", html, text }));
-                  window.dispatchEvent(
-                    new CustomEvent("app:toast", { detail: { message: "Отправлено" } }),
-                  );
-                } else {
-                  window.dispatchEvent(
-                    new CustomEvent("app:toast", { detail: { message: "Открывайте в Telegram" } }),
-                  );
+                const container = messageRef.current;
+                if (container) {
+                  const selection = window.getSelection();
+                  const range = document.createRange();
+                  range.selectNodeContents(container);
+                  selection?.removeAllRanges();
+                  selection?.addRange(range);
+                  const copied = document.execCommand("copy");
+                  selection?.removeAllRanges();
+                  if (copied) {
+                    window.dispatchEvent(
+                      new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+                    );
+                    return;
+                  }
                 }
+                const plain = buildPlainMessage();
+                navigator.clipboard?.writeText(plain);
+                window.dispatchEvent(
+                  new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+                );
               }}
             >
-              Отправить в Telegram
+              Скопировать расписание
             </button>
           </>
         )}
