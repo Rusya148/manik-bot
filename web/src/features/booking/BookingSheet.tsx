@@ -182,6 +182,9 @@ const BookingSheet = ({ open, onClose }: Props) => {
               type="date"
               value={form.date}
               onChange={(event) => setForm((prev) => ({ ...prev, date: event.target.value }))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") (event.currentTarget as HTMLInputElement).blur();
+              }}
             />
           </div>
           <div>
@@ -214,6 +217,9 @@ const BookingSheet = ({ open, onClose }: Props) => {
                     : "Время должно быть в формате HH:MM.",
                 );
               }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") (event.currentTarget as HTMLInputElement).blur();
+              }}
               placeholder="10:00"
             />
             {timeError && <div className="mt-1 text-xs text-[color:#d9534f]">{timeError}</div>}
@@ -229,6 +235,9 @@ const BookingSheet = ({ open, onClose }: Props) => {
                 setNameTouched(true);
                 setForm((prev) => ({ ...prev, name: event.target.value }));
               }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") (event.currentTarget as HTMLInputElement).blur();
+              }}
               placeholder="Анна"
             />
           </div>
@@ -237,6 +246,9 @@ const BookingSheet = ({ open, onClose }: Props) => {
             <Input
               value={form.link}
               onChange={(event) => setForm((prev) => ({ ...prev, link: event.target.value }))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") (event.currentTarget as HTMLInputElement).blur();
+              }}
               placeholder="@username"
             />
           </div>
@@ -264,6 +276,9 @@ const BookingSheet = ({ open, onClose }: Props) => {
               onChange={(event) =>
                 setForm((prev) => ({ ...prev, prepayment: event.target.value }))
               }
+              onKeyDown={(event) => {
+                if (event.key === "Enter") (event.currentTarget as HTMLInputElement).blur();
+              }}
               placeholder="Сумма"
               className="mt-2"
             />
@@ -272,21 +287,21 @@ const BookingSheet = ({ open, onClose }: Props) => {
             Сумма необязательна — можно оставить пустым.
           </div>
         </div>
-        <Button onClick={handleSubmit} disabled={mutation.isPending || Boolean(timeError)}>
-          {editing ? "Сохранить" : "Создать"}
-        </Button>
-        {editing && (
-          <div className="flex justify-end">
+        <div className="flex items-center justify-between gap-3">
+          <Button onClick={handleSubmit} disabled={mutation.isPending || Boolean(timeError)}>
+            {editing ? "Сохранить" : "Создать"}
+          </Button>
+          {editing && (
             <Button
               variant="secondary"
-              className="mt-2 text-[color:#d9534f] border-[color:#d9534f]"
+              className="text-[color:#d9534f] border-[color:#d9534f]"
               onClick={() => deleteMutation.mutate()}
               disabled={deleteMutation.isPending}
             >
               Удалить запись
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </BottomSheet>
   );

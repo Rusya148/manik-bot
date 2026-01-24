@@ -15,7 +15,17 @@ const App = () => {
   const closeBooking = useAppStore((state) => state.closeBooking);
 
   return (
-    <div className="app-shell">
+    <div
+      className="app-shell"
+      onPointerDown={(event) => {
+        const target = event.target as HTMLElement | null;
+        if (!target) return;
+        const isField = target.closest("input, textarea, select");
+        if (!isField) {
+          (document.activeElement as HTMLElement | null)?.blur();
+        }
+      }}
+    >
       {activeScreen === "calendar" && <CalendarScreen />}
       {activeScreen === "schedule" && <ScheduleScreen />}
       {activeScreen === "clients" && <ClientsScreen />}
