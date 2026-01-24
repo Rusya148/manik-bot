@@ -73,6 +73,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
     prepaymentEnabled: false,
   });
   const [timeError, setTimeError] = useState<string | null>(null);
+  const [nameTouched, setNameTouched] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -85,6 +86,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
         prepayment: editing.prepayment ? String(editing.prepayment) : "",
         prepaymentEnabled: Boolean(editing.prepayment),
       });
+      setNameTouched(false);
       return;
     }
     const rounded = roundTime(draftTime, settings.slotStepMinutes);
@@ -96,6 +98,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
       prepayment: "",
       prepaymentEnabled: false,
     });
+    setNameTouched(false);
   }, [draftTime, editing, open, selectedDate, settings.slotStepMinutes]);
 
   const mutation = useMutation({
@@ -158,12 +161,12 @@ const BookingSheet = ({ open, onClose }: Props) => {
   }, [editing, handleSubmit, onClose, open, webApp]);
 
   useEffect(() => {
-    if (!form.link || form.name) return;
+    if (!form.link || form.name || nameTouched) return;
     const match = knownClients?.find((client) => client.link === form.link);
     if (match) {
       setForm((prev) => ({ ...prev, name: match.name }));
     }
-  }, [form.name, form.link, knownClients]);
+  }, [form.name, form.link, knownClients, nameTouched]);
 
   return (
     <BottomSheet
@@ -222,7 +225,10 @@ const BookingSheet = ({ open, onClose }: Props) => {
             <Input
               autoFocus
               value={form.name}
-              onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
+              onChange={(event) => {
+                setNameTouched(true);
+                setForm((prev) => ({ ...prev, name: event.target.value }));
+              }}
               placeholder="Анна"
             />
           </div>
@@ -270,14 +276,16 @@ const BookingSheet = ({ open, onClose }: Props) => {
           {editing ? "Сохранить" : "Создать"}
         </Button>
         {editing && (
-          <Button
-            variant="secondary"
-            className="mt-2 text-[color:#d9534f] border-[color:#d9534f]"
-            onClick={() => deleteMutation.mutate()}
-            disabled={deleteMutation.isPending}
-          >
-            Удалить запись
-          </Button>
+          <div className="flex justify-end">
+            <Button
+              variant="secondary"
+              className="mt-2 text-[color:#d9534f] border-[color:#d9534f]"
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+            >
+              Удалить запись
+            </Button>
+          </div>
         )}
       </div>
     </BottomSheet>
