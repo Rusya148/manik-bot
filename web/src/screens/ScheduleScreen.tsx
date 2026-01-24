@@ -51,13 +51,8 @@ const ScheduleScreen = () => {
     setCursor(toLocalIsoMonth(date));
   };
 
-  const strikeTimesOnly = (value: string) =>
-    value.replace(/\b\d{1,2}[.:]\d{2}\b/g, (match) =>
-      normalizeTimeInput(match)
-        .split("")
-        .map((char) => `${char}\u0336`)
-        .join(""),
-    );
+  const normalizeTimesInText = (value: string) =>
+    value.replace(/\b\d{1,2}[.:]\d{2}\b/g, (match) => normalizeTimeInput(match));
 
   return (
     <div className="space-y-4">
@@ -130,24 +125,33 @@ const ScheduleScreen = () => {
             })}
             <button
               className="text-xs text-accent"
-              onClick={() =>
-                navigator.clipboard?.writeText(
-                  message
-                    .map((line) =>
-                      line
-                        .replace(/<s>(.*?)<\/s>/g, (_, text) => ` ${strikeTimesOnly(text)} `)
-                        .replace(/<\/?s>/g, ""),
-                    )
-                    .map((line) => line.replace(/\s+/g, " ").trim())
-                    .join("\n"),
-                )
-                  .then(() =>
-                    window.dispatchEvent(
-                      new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
-                    ),
+              onClick={async () => {
+                const normalized = message
+                  .map((line) =>
+                    line
+                      .replace(/<s>(.*?)<\/s>/g, (_, text) => `<s>${normalizeTimesInText(text)}</s>`)
+                      .replace(/\s+/g, " ")
+                      .trim(),
                   )
-                  .catch(() => {})
-              }
+                  .join("\n");
+                const plain = normalized.replace(/<\/?s>/g, "");
+                try {
+                  if (navigator.clipboard && "write" in navigator.clipboard) {
+                    const item = new ClipboardItem({
+                      "text/plain": new Blob([plain], { type: "text/plain" }),
+                      "text/html": new Blob([normalized], { type: "text/html" }),
+                    });
+                    await navigator.clipboard.write([item]);
+                  } else {
+                    await navigator.clipboard?.writeText(plain);
+                  }
+                  window.dispatchEvent(
+                    new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+                  );
+                } catch {
+                  await navigator.clipboard?.writeText(plain);
+                }
+              }}
             >
               Скопировать текст
             </button>
