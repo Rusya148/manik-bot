@@ -582,21 +582,24 @@ const setupSchedule = () => {
     }
     const { year, month } = parseMonthInput(monthInput.value);
     try {
-      const selected = await apiFetch(`/schedule/selected?year=${year}&month=${month}`);
+      const [selected, marked] = await Promise.all([
+        apiFetch(`/schedule/selected?year=${year}&month=${month}`),
+        apiFetch(`/clients/marked-days?year=${year}&month=${month}`),
+      ]);
       renderCalendar(
         grid,
         year,
         month,
-        [],
+        marked.days || [],
         async (day, _iso, cell) => {
           const dateIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           try {
             const booked = await apiFetch(`/clients/day?date_iso=${dateIso}`);
             if (booked.length) {
               const info = booked
-                .map((client) => `${client.name} (${client.time})`)
+                .map((client) => `${client.name} ${client.time} ${client.link || ""}`.trim())
                 .join(", ");
-              showToast(`Есть записи: ${info}`);
+              showToast(`Записи ${formatDateDisplay(dateIso)}: ${info}`);
             }
           } catch (error) {
             showToast(error.message, true);
