@@ -267,6 +267,12 @@ button:active {
   gap: 8px;
 }
 
+.schedule-day-title {
+  margin-bottom: 10px;
+  color: var(--minion-muted);
+  font-size: 13px;
+}
+
 input.invalid {
   border-color: #e53e3e;
   box-shadow: 0 0 0 3px rgba(229, 62, 62, 0.2);

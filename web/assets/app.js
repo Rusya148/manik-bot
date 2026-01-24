@@ -506,6 +506,8 @@ const setupSchedule = () => {
   const result = document.getElementById("schedule-result");
   const resetButton = document.getElementById("schedule-reset");
   const applyButton = document.getElementById("schedule-apply");
+  const dayTitle = document.getElementById("schedule-day-title");
+  const dayClients = document.getElementById("schedule-day-clients");
   const slotsCard = document.getElementById("schedule-slots");
   const slotsToggle = document.getElementById("slots-toggle");
   const slotInputs = {
@@ -595,11 +597,11 @@ const setupSchedule = () => {
           const dateIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           try {
             const booked = await apiFetch(`/clients/day?date_iso=${dateIso}`);
-            if (booked.length) {
-              const info = booked
-                .map((client) => `${client.name} ${client.time} ${client.link || ""}`.trim())
-                .join(", ");
-              showToast(`Записи ${formatDateDisplay(dateIso)}: ${info}`);
+            if (dayTitle) {
+              dayTitle.textContent = `Записи на ${formatDateDisplay(dateIso)}`;
+            }
+            if (dayClients) {
+              renderClients(dayClients, booked);
             }
           } catch (error) {
             showToast(error.message, true);
@@ -623,6 +625,12 @@ const setupSchedule = () => {
         selected.days
       );
       result.textContent = "Выберите дни и нажмите «Сгенерировать».";
+      if (dayTitle) {
+        dayTitle.textContent = "Выберите день.";
+      }
+      if (dayClients) {
+        dayClients.textContent = "";
+      }
     } catch (error) {
       showToast(error.message, true);
     }
