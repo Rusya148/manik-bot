@@ -443,6 +443,7 @@ const setupSchedule = () => {
   const grid = document.getElementById("schedule-grid");
   const result = document.getElementById("schedule-result");
   const resetButton = document.getElementById("schedule-reset");
+  const applyButton = document.getElementById("schedule-apply");
   const slotsCard = document.getElementById("schedule-slots");
   const slotsToggle = document.getElementById("slots-toggle");
   const slotInputs = {
@@ -610,6 +611,20 @@ const setupSchedule = () => {
 
   document.addEventListener("touchstart", blurActiveSlotInput);
   document.addEventListener("mousedown", blurActiveSlotInput);
+  if (applyButton) {
+    applyButton.addEventListener("click", async () => {
+      if (!validateSlots()) {
+        showToast("Проверьте формат времени слотов.", true);
+        return;
+      }
+      try {
+        await saveSlots();
+        showToast("Слоты сохранены");
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    });
+  }
   if (resetButton) {
     resetButton.addEventListener("click", () => {
       apiFetch("/schedule/slots/reset", { method: "POST" })
