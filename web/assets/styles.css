@@ -34,7 +34,7 @@ body {
   background-size: 100% 100%, clamp(280px, 85vw, 720px) auto, auto, auto, auto;
   background-position: center, center, center, center, center;
   background-repeat: no-repeat, no-repeat, no-repeat, no-repeat, no-repeat;
-  background-attachment: scroll, scroll, scroll, scroll, scroll;
+  background-attachment: fixed, fixed, scroll, scroll, scroll;
 }
 
 .tabs {
