@@ -102,6 +102,10 @@ def _normalize_time_to_hhmm(value: str) -> str:
     return f"{hh:02d}:{mm:02d}"
 
 
+def _strip_star(value: str) -> str:
+    return value.replace("*", "").strip()
+
+
 def _hhmm_to_minutes(hhmm: str) -> int:
     try:
         hh, mm = hhmm.split(":")
@@ -118,13 +122,13 @@ def _format_hhmm_with_dot(hhmm: str) -> str:
 
 
 DEFAULT_SLOTS = {
-    0: ["11:00", "14:00", "17:00", "20:00"],
-    1: ["11:00", "14:00", "17:00", "20:00"],
-    2: ["11:00", "14:00", "17:00", "20:00"],
-    3: ["11:00", "14:00", "17:00", "20:00"],
-    4: ["11:00", "14:00", "17:00", "20:00"],
-    5: ["10:00", "13:00", "16:00", "19:00"],
-    6: ["10:00", "13:00", "16:00", "19:00"],
+    0: ["11:00", "14:00", "17:00", "20:00*"],
+    1: ["11:00", "14:00", "17:00", "20:00*"],
+    2: ["11:00", "14:00", "17:00", "20:00*"],
+    3: ["11:00", "14:00", "17:00", "20:00*"],
+    4: ["11:00", "14:00", "17:00", "20:00*"],
+    5: ["10:00", "13:00", "16:00", "19:00*"],
+    6: ["10:00", "13:00", "16:00", "19:00*"],
 }
 
 WEEKDAYS_RU_SHORT = ["пн", "вт", "ср", "чт", "пт", "сб", "вс"]
@@ -345,12 +349,21 @@ def schedule_generate(year: int, month: int, payload: ScheduleGenerateRequest = 
         booked_norm = {_normalize_time_to_hhmm(t) for t in booked if _normalize_time_to_hhmm(t)}
         booked_minutes = {_hhmm_to_minutes(t) for t in booked_norm if _hhmm_to_minutes(t) >= 0}
 
-        candidate_times = set(slots) | set(booked_norm)
+        slot_flags = {}
+        for t in slots:
+            raw = str(t)
+            starred = raw.endswith("*")
+            base = _strip_star(raw)
+            slot_flags[base] = starred or slot_flags.get(base, False)
+
+        candidate_times = set(booked_norm) | set(slot_flags.keys())
         candidate_sorted = sorted(candidate_times, key=lambda t: _hhmm_to_minutes(t))
 
         slot_texts: List[str] = []
         for hhmm in candidate_sorted:
             disp = _format_hhmm_with_dot(hhmm)
+            if slot_flags.get(hhmm):
+                disp = f"{disp}*"
             tmin = _hhmm_to_minutes(hhmm)
             if hhmm in booked_norm:
                 slot_texts.append(f"<s>{disp}</s>")
@@ -412,8 +425,15 @@ def _normalize_slots_payload(raw_slots: dict) -> dict:
             parts = [str(s).strip() for s in times if str(s).strip()]
         else:
             continue
-        cleaned = [_normalize_time_to_hhmm(t) for t in parts]
-        cleaned = [t for t in cleaned if t]
+        cleaned = []
+        for t in parts:
+            raw = str(t).strip()
+            starred = raw.endswith("*")
+            base = _strip_star(raw)
+            norm = _normalize_time_to_hhmm(base)
+            if not norm:
+                continue
+            cleaned.append(f"{norm}*" if starred else norm)
         if cleaned:
             normalized[weekday] = cleaned
     return normalized

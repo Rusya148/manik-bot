@@ -82,18 +82,25 @@ const ScheduleScreen = () => {
     setCursor(toLocalIsoMonth(date));
   };
 
-  const normalizeTimesInText = (value: string) =>
-    value.replace(/\b\d{1,2}[.:]\d{2}\b/g, (match) => normalizeTimeInput(match));
+  const cleanedLines = useMemo(
+    () =>
+      message
+        .map((line) => line.replace(/\s+/g, " ").trim())
+        .filter((line) => Boolean(line)),
+    [message],
+  );
+
+  const { headerLine, bodyLines } = useMemo(() => {
+    const first = cleanedLines[0];
+    if (first && first.toLowerCase().startsWith("расписание за")) {
+      return { headerLine: first, bodyLines: cleanedLines.slice(1) };
+    }
+    return { headerLine: null as string | null, bodyLines: cleanedLines };
+  }, [cleanedLines]);
 
   const buildPlainMessage = () =>
-    message
-      .map((line) =>
-        line
-          .replace(/<s>(.*?)<\/s>/g, (_, text) => normalizeTimesInText(text))
-          .replace(/<\/?s>/g, "")
-          .replace(/\s+/g, " ")
-          .trim(),
-      )
+    bodyLines
+      .map((line) => line.replace(/<\/?s>/g, ""))
       .join("\n");
 
   return (
@@ -181,58 +188,54 @@ const ScheduleScreen = () => {
       <Card className="space-y-3">
         <div className="text-sm font-semibold">Сообщение для отправки</div>
         <Button onClick={() => generateMutation.mutate()}>Сгенерировать</Button>
-        {message.length > 0 && (
-          <>
-            <div className="space-y-2 text-sm" ref={messageRef}>
-              {message.map((line, idx) => {
-                if (!line) return <div key={`empty-${idx}`}>&nbsp;</div>;
-                const parts = line.split(/(<s>.*?<\/s>)/g);
-                return (
-                  <div key={`${line}-${idx}`}>
-                    {parts.map((part, partIdx) => {
-                      if (part.startsWith("<s>") && part.endsWith("</s>")) {
-                        const text = part.replace("<s>", "").replace("</s>", "");
-                        return (
-                          <span key={`${part}-${partIdx}`} className="line-through text-hint">
-                            {text}
-                          </span>
-                        );
-                      }
-                      return <span key={`${part}-${partIdx}`}>{part}</span>;
-                    })}
-                  </div>
-                );
-              })}
-            </div>
-            <button
-              className="select-none text-xs text-accent"
-              onClick={() => {
-                const container = messageRef.current;
-                if (container) {
-                  const selection = window.getSelection();
-                  const range = document.createRange();
-                  range.selectNodeContents(container);
-                  selection?.removeAllRanges();
-                  selection?.addRange(range);
-                  const copied = document.execCommand("copy");
-                  selection?.removeAllRanges();
-                  if (copied) {
-                    window.dispatchEvent(
-                      new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
-                    );
-                    return;
-                  }
+        {bodyLines.length > 0 && (
+          <div
+            className="space-y-2 text-sm"
+            ref={messageRef}
+            onClick={() => {
+              const container = messageRef.current;
+              if (container) {
+                const selection = window.getSelection();
+                const range = document.createRange();
+                range.selectNodeContents(container);
+                selection?.removeAllRanges();
+                selection?.addRange(range);
+                const copied = document.execCommand("copy");
+                selection?.removeAllRanges();
+                if (copied) {
+                  window.dispatchEvent(
+                    new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+                  );
+                  return;
                 }
-                const plain = buildPlainMessage();
-                navigator.clipboard?.writeText(plain);
-                window.dispatchEvent(
-                  new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
-                );
-              }}
-            >
-              Скопировать расписание
-            </button>
-          </>
+              }
+              const plain = buildPlainMessage();
+              navigator.clipboard?.writeText(plain);
+              window.dispatchEvent(
+                new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+              );
+            }}
+          >
+            {headerLine && <div className="text-sm font-semibold">{headerLine}</div>}
+            {bodyLines.map((line, idx) => {
+              const parts = line.split(/(<s>.*?<\/s>)/g);
+              return (
+                <div key={`${line}-${idx}`}>
+                  {parts.map((part, partIdx) => {
+                    if (part.startsWith("<s>") && part.endsWith("</s>")) {
+                      const text = part.replace("<s>", "").replace("</s>", "");
+                      return (
+                        <span key={`${part}-${partIdx}`} className="line-through text-hint">
+                          {text}
+                        </span>
+                      );
+                    }
+                    return <span key={`${part}-${partIdx}`}>{part}</span>;
+                  })}
+                </div>
+              );
+            })}
+          </div>
         )}
       </Card>
     </div>
