@@ -180,7 +180,6 @@ const BookingSheet = ({ open, onClose }: Props) => {
               value={form.date}
               onChange={(event) => setForm((prev) => ({ ...prev, date: event.target.value }))}
             />
-            <div className="mt-1 text-xs text-hint">День записи клиента.</div>
           </div>
           <div>
             <div className="text-xs text-hint">Время</div>
@@ -214,9 +213,6 @@ const BookingSheet = ({ open, onClose }: Props) => {
               }}
               placeholder="10:00"
             />
-            <div className="mt-1 text-xs text-hint">
-              Формат строго HH:MM, например 10:00.
-            </div>
             {timeError && <div className="mt-1 text-xs text-[color:#d9534f]">{timeError}</div>}
           </div>
         </div>
@@ -229,7 +225,6 @@ const BookingSheet = ({ open, onClose }: Props) => {
               onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
               placeholder="Анна"
             />
-            <div className="mt-1 text-xs text-hint">Имя клиента для карточки.</div>
           </div>
           <div>
             <div className="text-xs text-hint">Ссылка на Telegram</div>
@@ -238,7 +233,6 @@ const BookingSheet = ({ open, onClose }: Props) => {
               onChange={(event) => setForm((prev) => ({ ...prev, link: event.target.value }))}
               placeholder="@username"
             />
-            <div className="mt-1 text-xs text-hint">Например, @client.</div>
           </div>
         </div>
         <div>
