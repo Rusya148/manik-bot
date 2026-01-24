@@ -136,73 +136,25 @@ const ScheduleScreen = () => {
                 </div>
               );
             })}
-            <div className="flex items-center gap-3">
-              <button
-                className="text-xs text-accent"
-                onClick={async () => {
-                const container = messageRef.current;
-                if (container) {
-                  const selection = window.getSelection();
-                  const range = document.createRange();
-                  range.selectNodeContents(container);
-                  selection?.removeAllRanges();
-                  selection?.addRange(range);
-                  const copied = document.execCommand("copy");
-                  selection?.removeAllRanges();
-                  if (copied) {
-                    window.dispatchEvent(
-                      new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
-                    );
-                    return;
-                  }
-                }
-
-                const normalized = buildHtmlMessage();
-                const plain = normalized.replace(/<\/?s>/g, "");
-                const clipboard = navigator.clipboard as
-                  | {
-                      write?: (items: ClipboardItem[]) => Promise<void>;
-                      writeText?: (text: string) => Promise<void>;
-                    }
-                  | undefined;
-                try {
-                  if (clipboard?.write) {
-                    const item = new ClipboardItem({
-                      "text/plain": new Blob([plain], { type: "text/plain" }),
-                      "text/html": new Blob([normalized], { type: "text/html" }),
-                    });
-                    await clipboard.write([item]);
-                  } else if (clipboard?.writeText) {
-                    await clipboard.writeText(plain);
-                  }
+            <button
+              className="text-xs text-accent"
+              onClick={() => {
+                const html = buildHtmlMessage();
+                const text = html.replace(/<\/?s>/g, "");
+                if (webApp?.sendData) {
+                  webApp.sendData(JSON.stringify({ type: "schedule", html, text }));
                   window.dispatchEvent(
-                    new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+                    new CustomEvent("app:toast", { detail: { message: "Отправлено" } }),
                   );
-                } catch {
-                  if (clipboard?.writeText) {
-                    await clipboard.writeText(plain);
-                  }
+                } else {
+                  window.dispatchEvent(
+                    new CustomEvent("app:toast", { detail: { message: "Открывайте в Telegram" } }),
+                  );
                 }
-                }}
-              >
-                Скопировать текст
-              </button>
-              {webApp && (
-                <button
-                  className="text-xs text-accent"
-                  onClick={() => {
-                    const html = buildHtmlMessage();
-                    const text = html.replace(/<\/?s>/g, "");
-                    webApp.sendData(JSON.stringify({ type: "schedule", html, text }));
-                    window.dispatchEvent(
-                      new CustomEvent("app:toast", { detail: { message: "Отправлено" } }),
-                    );
-                  }}
-                >
-                  Отправить в Telegram
-                </button>
-              )}
-            </div>
+              }}
+            >
+              Отправить в Telegram
+            </button>
           </div>
         )}
       </Card>
