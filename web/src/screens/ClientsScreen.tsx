@@ -1,7 +1,6 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getClientsByRange } from "@/services/api/clients";
-import { useBookingMetaStore, buildBookingKey } from "@/stores/useBookingMetaStore";
 import { BottomSheet } from "@/shared/ui/BottomSheet";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
 import { Input } from "@/shared/ui/Input";
@@ -30,7 +29,6 @@ const ClientsScreen = () => {
   const [search, setSearch] = useState("");
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historyClient, setHistoryClient] = useState<ClientGroup | null>(null);
-  const metaByKey = useBookingMetaStore((state) => state.metaByKey);
   const range = useMemo(getRange, []);
 
   const { data, isLoading } = useQuery({
@@ -54,18 +52,14 @@ const ClientsScreen = () => {
     });
     return Array.from(map.values()).map((entry) => {
       const visits = entry.visits.sort().reverse();
-      const latest = visits[0];
-      const latestNote = latest
-        ? metaByKey[buildBookingKey(latest.split(" ")[0], latest.split(" ")[1], entry.link)]
-        : undefined;
       return {
         ...entry,
         visits,
         ids: entry.ids,
-        note: latestNote?.comment ?? "",
+        note: "",
       };
     });
-  }, [data, metaByKey]);
+  }, [data]);
 
   const filtered = useMemo(() => {
     if (!search) return grouped;
@@ -112,11 +106,6 @@ const ClientsScreen = () => {
                   Открыть
                 </button>
               </div>
-              {client.note && (
-                <div className="rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-xs">
-                  {client.note}
-                </div>
-              )}
               <div className="text-xs text-hint">История</div>
               <div className="flex flex-wrap gap-2 text-xs">
                 {client.visits.slice(0, 4).map((visit) => {

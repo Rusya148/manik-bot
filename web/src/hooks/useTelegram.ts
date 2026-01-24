@@ -47,17 +47,28 @@ export const useTelegram = () => {
       root.setProperty("--safe-area-right", `${inset.right}px`);
     };
 
+    const applyViewportHeight = () => {
+      const root = document.documentElement.style;
+      const height = window.visualViewport?.height ?? window.innerHeight;
+      root.setProperty("--viewport-height", `${height}px`);
+    };
+
     tg.ready();
     tg.expand();
     applyTheme();
     applySafeArea();
+    applyViewportHeight();
     tg.onEvent("themeChanged", applyTheme);
     tg.onEvent("viewportChanged", applySafeArea);
+    tg.onEvent("viewportChanged", applyViewportHeight);
+    window.visualViewport?.addEventListener("resize", applyViewportHeight);
     setWebApp(tg);
 
     return () => {
       tg.offEvent("themeChanged", applyTheme);
       tg.offEvent("viewportChanged", applySafeArea);
+      tg.offEvent("viewportChanged", applyViewportHeight);
+      window.visualViewport?.removeEventListener("resize", applyViewportHeight);
     };
   }, []);
 

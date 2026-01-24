@@ -38,10 +38,12 @@ body {
   background: var(--app-bg);
   color: var(--app-text);
   margin: 0;
+  overflow: hidden;
 }
 
 .app-shell {
   min-height: 100%;
+  height: var(--viewport-height, 100vh);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding: calc(12px + var(--safe-area-top)) 12px

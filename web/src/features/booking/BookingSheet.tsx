@@ -2,11 +2,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTelegram } from "@/hooks/useTelegram";
 import { useAppStore } from "@/stores/useAppStore";
-import { useBookingMetaStore, buildBookingKey } from "@/stores/useBookingMetaStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { BottomSheet } from "@/shared/ui/BottomSheet";
 import { Input } from "@/shared/ui/Input";
-import { Textarea } from "@/shared/ui/Textarea";
 import { Button } from "@/shared/ui/Button";
 import { createClient, getClientsByDay, getClientsByRange, updateClient } from "@/services/api/clients";
 import { normalizeTimeInput, toLocalIsoDate } from "@/shared/utils/date";
@@ -41,7 +39,6 @@ const BookingSheet = ({ open, onClose }: Props) => {
   const editingBookingId = useAppStore((state) => state.editingBookingId);
   const draftTime = useAppStore((state) => state.bookingDraftTime);
   const settings = useSettingsStore();
-  const { metaByKey, setMeta, clearMeta } = useBookingMetaStore();
 
   const { data: dayClients } = useQuery({
     queryKey: ["clients", "day", selectedDate],
@@ -66,7 +63,6 @@ const BookingSheet = ({ open, onClose }: Props) => {
     time: "",
     name: "",
     link: "",
-    comment: "",
     prepayment: "",
     prepaymentEnabled: false,
   });
@@ -74,14 +70,11 @@ const BookingSheet = ({ open, onClose }: Props) => {
   useEffect(() => {
     if (!open) return;
     if (editing) {
-      const key = buildBookingKey(editing.date, editing.time, editing.link);
-      const meta = metaByKey[key];
       setForm({
         date: editing.date,
         time: editing.time,
         name: editing.name,
         link: editing.link,
-        comment: meta?.comment ?? "",
         prepayment: editing.prepayment ? String(editing.prepayment) : "",
         prepaymentEnabled: Boolean(editing.prepayment),
       });
@@ -93,11 +86,10 @@ const BookingSheet = ({ open, onClose }: Props) => {
       time: rounded || draftTime || "",
       name: "",
       link: "",
-      comment: "",
       prepayment: "",
       prepaymentEnabled: false,
     });
-  }, [draftTime, editing, metaByKey, open, selectedDate, settings.slotStepMinutes]);
+  }, [draftTime, editing, open, selectedDate, settings.slotStepMinutes]);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -116,14 +108,6 @@ const BookingSheet = ({ open, onClose }: Props) => {
       return createClient(payload);
     },
     onSuccess: () => {
-      const key = buildBookingKey(form.date, form.time, form.link);
-      setMeta(key, {
-        comment: form.comment.trim(),
-      });
-      if (editing) {
-        const prevKey = buildBookingKey(editing.date, editing.time, editing.link);
-        if (prevKey !== key) clearMeta(prevKey);
-      }
       queryClient.invalidateQueries({ queryKey: ["clients"] });
       onClose();
     },
@@ -216,16 +200,8 @@ const BookingSheet = ({ open, onClose }: Props) => {
           </div>
         </div>
         <div>
-          <div className="text-xs text-hint">Комментарий</div>
-          <Textarea
-            value={form.comment}
-            onChange={(event) => setForm((prev) => ({ ...prev, comment: event.target.value }))}
-          />
-          <div className="mt-1 text-xs text-hint">Короткая заметка для себя.</div>
-        </div>
-        <div>
           <div className="text-xs text-hint">Предоплата</div>
-          <label className="flex items-center gap-2 text-sm">
+          <label className="flex items-center gap-2 text-sm text-hint">
             <input
               type="checkbox"
               checked={form.prepaymentEnabled}
@@ -233,7 +209,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
                 setForm((prev) => ({
                   ...prev,
                   prepaymentEnabled: event.target.checked,
-                  prepayment: event.target.checked ? prev.prepayment || "1" : "",
+                  prepayment: event.target.checked ? prev.prepayment : "",
                 }))
               }
             />
@@ -251,7 +227,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
             />
           )}
           <div className="mt-1 text-xs text-hint">
-            Если сумма пустая, будет отмечено просто как предоплата.
+            Сумма необязательна — можно оставить пустым.
           </div>
         </div>
         <Button onClick={handleSubmit} disabled={mutation.isPending}>

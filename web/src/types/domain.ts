@@ -9,10 +9,6 @@ export type Booking = {
   prepaymentDisplay?: string;
 };
 
-export type BookingMeta = {
-  comment?: string;
-};
-
 export type Settings = {
   workdayStart: string;
   workdayEnd: string;
