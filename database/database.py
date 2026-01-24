@@ -175,35 +175,62 @@ def remove_last_expenses_from_db(month_year):
         print(f"Ошибка при удалении последней траты: {e}")
 
 
-def _normalize_link_variants(link: str):
-    raw = (link or "").strip()
+def _normalize_link_base(link: str) -> str:
+    raw = (link or "").strip().lower()
     if not raw:
-        return []
-    lower = raw.lower()
-    if lower.startswith("@"):
-        base = lower[1:]
-    else:
-        base = lower
-    variants = {lower, f"@{base}", base}
-    return [v for v in variants if v]
+        return ""
+    if raw.startswith("https://"):
+        raw = raw[8:]
+    elif raw.startswith("http://"):
+        raw = raw[7:]
+    if raw.startswith("t.me/"):
+        raw = raw[5:]
+    elif raw.startswith("telegram.me/"):
+        raw = raw[12:]
+    if raw.startswith("@"):
+        raw = raw[1:]
+    return raw.strip()
 
 
-def count_visits_by_link(link: str) -> int:
+def _link_display(base: str) -> str:
+    if not base:
+        return ""
+    return f"@{base}"
+
+
+def count_visits_by_link(link: str) -> tuple[int, str]:
     try:
-        variants = _normalize_link_variants(link)
-        if not variants:
-            return 0
+        base = _normalize_link_base(link)
+        if not base:
+            return 0, ""
         with sqlite3.connect('database_client.db') as connection:
             cursor = connection.cursor()
-            placeholders = ", ".join("?" for _ in variants)
-            cursor.execute(
-                f'SELECT COUNT(*) FROM clients WHERE lower(link) IN ({placeholders})',
-                variants,
-            )
-            return int(cursor.fetchone()[0] or 0)
+            cursor.execute('SELECT link FROM clients')
+            rows = cursor.fetchall()
+        count = sum(1 for (value,) in rows if _normalize_link_base(value) == base)
+        return count, _link_display(base)
     except sqlite3.Error as e:
         print(f"Ошибка при подсчете посещений: {e}")
-        return 0
+        return 0, _link_display(_normalize_link_base(link))
+
+
+def get_top_visits(limit: int = 10):
+    try:
+        with sqlite3.connect('database_client.db') as connection:
+            cursor = connection.cursor()
+            cursor.execute('SELECT link FROM clients')
+            rows = cursor.fetchall()
+        counts = {}
+        for (value,) in rows:
+            base = _normalize_link_base(value)
+            if not base:
+                continue
+            counts[base] = counts.get(base, 0) + 1
+        top = sorted(counts.items(), key=lambda item: item[1], reverse=True)[:max(1, limit)]
+        return [(_link_display(base), count) for base, count in top]
+    except sqlite3.Error as e:
+        print(f"Ошибка при получении топа посещений: {e}")
+        return []
 
 create_clients_table()
 migrate_clients_add_prepayment()

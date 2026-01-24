@@ -766,10 +766,30 @@ const setupVisits = () => {
   const linkInput = document.getElementById("visits-link");
   const countButton = document.getElementById("visits-count");
   const result = document.getElementById("visits-result");
-  if (!linkInput || !countButton || !result) return;
+  const topButton = document.getElementById("visits-top");
+  const topList = document.getElementById("visits-top-list");
+  if (!linkInput || !countButton || !result || !topList) return;
 
   const renderResult = (link, count) => {
-    result.textContent = `Посещений для ${link}: ${count}`;
+    const display = link && link.startsWith("@") ? link : `@${link}`;
+    result.textContent = `Посещений для ${display}: ${count}`;
+  };
+
+  const renderTop = (items) => {
+    if (!items.length) {
+      topList.textContent = "Нет данных.";
+      return;
+    }
+    topList.innerHTML = items
+      .map(
+        (item, index) => `
+          <div class="list-item">
+            <div class="list-title">${index + 1}. ${item.link}</div>
+            <div class="list-meta">Посещений: ${item.count}</div>
+          </div>
+        `
+      )
+      .join("");
   };
 
   countButton.addEventListener("click", async () => {
@@ -785,6 +805,17 @@ const setupVisits = () => {
       showToast(error.message, true);
     }
   });
+
+  if (topButton) {
+    topButton.addEventListener("click", async () => {
+      try {
+        const data = await apiFetch("/visits/top?limit=10");
+        renderTop(data.items || []);
+      } catch (error) {
+        showToast(error.message, true);
+      }
+    });
+  }
 };
 
 document.addEventListener("DOMContentLoaded", () => {

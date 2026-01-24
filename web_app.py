@@ -13,6 +13,7 @@ from database.database import (
     add_salary_to_db,
     count_visits_by_link,
     delete_client_by_id,
+    get_top_visits,
     get_total_expenses_for_month,
     get_total_salary_for_month,
     remove_last_expenses_from_db,
@@ -293,7 +294,14 @@ def expenses_remove_last(month: str = Query(..., description="YYYY-MM")):
 
 @app.get("/api/visits")
 def visits_count(link: str = Query(..., min_length=1)):
-    return {"link": link, "count": count_visits_by_link(link)}
+    count, display = count_visits_by_link(link)
+    return {"link": display, "count": count}
+
+
+@app.get("/api/visits/top")
+def visits_top(limit: int = Query(10, ge=1, le=100)):
+    items = get_top_visits(limit)
+    return {"items": [{"link": link, "count": count} for link, count in items]}
 
 
 @app.get("/api/schedule/selected")
