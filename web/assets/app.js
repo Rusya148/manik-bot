@@ -261,6 +261,8 @@ const setupClients = () => {
 const setupCalendar = () => {
   const monthInput = document.getElementById("calendar-month");
   const loadButton = document.getElementById("calendar-load");
+  const prevButton = document.getElementById("calendar-prev");
+  const nextButton = document.getElementById("calendar-next");
   const grid = document.getElementById("calendar-grid");
   const dayClients = document.getElementById("calendar-day-clients");
   const modal = document.getElementById("edit-modal");
@@ -385,6 +387,27 @@ const setupCalendar = () => {
   };
 
   loadButton.addEventListener("click", loadMonth);
+  if (prevButton) {
+    prevButton.addEventListener("click", () => {
+      if (!monthInput.value) {
+        const now = new Date();
+        monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
+      }
+      monthInput.value = shiftMonthValue(monthInput.value, -1);
+      loadMonth();
+    });
+  }
+  if (nextButton) {
+    nextButton.addEventListener("click", () => {
+      if (!monthInput.value) {
+        const now = new Date();
+        monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
+      }
+      monthInput.value = shiftMonthValue(monthInput.value, 1);
+      loadMonth();
+    });
+  }
+  monthInput.addEventListener("change", loadMonth);
   if (!monthInput.value) {
     const now = new Date();
     monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
@@ -396,7 +419,6 @@ const setupSchedule = () => {
   const monthInput = document.getElementById("schedule-month");
   const prevButton = document.getElementById("schedule-prev");
   const nextButton = document.getElementById("schedule-next");
-  const loadButton = document.getElementById("schedule-load");
   const generateButton = document.getElementById("schedule-generate");
   const grid = document.getElementById("schedule-grid");
   const result = document.getElementById("schedule-result");
@@ -502,7 +524,6 @@ const setupSchedule = () => {
     }
   };
 
-  loadButton.addEventListener("click", loadMonth);
   prevButton.addEventListener("click", () => {
     if (!monthInput.value) {
       const now = new Date();

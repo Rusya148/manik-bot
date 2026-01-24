@@ -77,6 +77,10 @@
     <section id="tab-calendar" class="tab-panel">
       <h2>Календарь записей</h2>
       <div class="card controls-row">
+        <div class="month-nav">
+          <button id="calendar-prev" type="button">‹</button>
+          <button id="calendar-next" type="button">›</button>
+        </div>
         <label>
           Месяц
           <input type="month" id="calendar-month" />
@@ -103,7 +107,6 @@
           Месяц
           <input type="month" id="schedule-month" />
         </label>
-        <button id="schedule-load">Загрузить</button>
         <button id="schedule-generate">Сгенерировать</button>
       </div>
       <div id="schedule-grid" class="calendar-grid card"></div>
