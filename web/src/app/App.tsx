@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTelegram } from "@/hooks/useTelegram";
 import { useAppStore } from "@/stores/useAppStore";
 import { TabBar } from "@/shared/ui/TabBar";
@@ -17,14 +17,25 @@ const App = () => {
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
 
+  useEffect(() => {
+    const handler = (event: Event) => {
+      const detail = (event as CustomEvent<{ message?: string }>).detail;
+      setToast(detail?.message ?? "Скопировано");
+      if (toastTimer.current) window.clearTimeout(toastTimer.current);
+      toastTimer.current = window.setTimeout(() => setToast(null), 1200);
+    };
+    window.addEventListener("app:toast", handler);
+    return () => window.removeEventListener("app:toast", handler);
+  }, []);
+
   return (
     <div
       className="app-shell"
       onPointerDown={(event) => {
         const target = event.target as HTMLElement | null;
         if (!target) return;
-        const isField = target.closest("input, textarea, select");
-        if (!isField) {
+        const isInteractive = target.closest("input, textarea, select, button");
+        if (!isInteractive) {
           (document.activeElement as HTMLElement | null)?.blur();
         }
       }}

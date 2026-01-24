@@ -193,6 +193,9 @@ const CalendarScreen = () => {
                       onClick={(event) => {
                         event.stopPropagation();
                         navigator.clipboard?.writeText(booking.link);
+                        window.dispatchEvent(
+                          new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+                        );
                       }}
                     >
                       <span className="truncate">{booking.link}</span>

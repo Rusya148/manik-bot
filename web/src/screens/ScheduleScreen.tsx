@@ -117,7 +117,17 @@ const ScheduleScreen = () => {
             })}
             <button
               className="text-xs text-accent"
-              onClick={() => navigator.clipboard?.writeText(message.join("\n"))}
+              onClick={() =>
+                navigator.clipboard?.writeText(
+                  message.map((line) => line.replace(/<\/?s>/g, "")).join("\n"),
+                )
+                  .then(() =>
+                    window.dispatchEvent(
+                      new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
+                    ),
+                  )
+                  .catch(() => {})
+              }
             >
               Скопировать текст
             </button>
