@@ -175,11 +175,31 @@ def remove_last_expenses_from_db(month_year):
         print(f"Ошибка при удалении последней траты: {e}")
 
 
+def _normalize_link_variants(link: str):
+    raw = (link or "").strip()
+    if not raw:
+        return []
+    lower = raw.lower()
+    if lower.startswith("@"):
+        base = lower[1:]
+    else:
+        base = lower
+    variants = {lower, f"@{base}", base}
+    return [v for v in variants if v]
+
+
 def count_visits_by_link(link: str) -> int:
     try:
+        variants = _normalize_link_variants(link)
+        if not variants:
+            return 0
         with sqlite3.connect('database_client.db') as connection:
             cursor = connection.cursor()
-            cursor.execute('SELECT COUNT(*) FROM clients WHERE link = ?', (link,))
+            placeholders = ", ".join("?" for _ in variants)
+            cursor.execute(
+                f'SELECT COUNT(*) FROM clients WHERE lower(link) IN ({placeholders})',
+                variants,
+            )
             return int(cursor.fetchone()[0] or 0)
     except sqlite3.Error as e:
         print(f"Ошибка при подсчете посещений: {e}")
