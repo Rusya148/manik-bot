@@ -272,6 +272,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
         {editing && (
           <Button
             variant="secondary"
+            className="mt-2 text-[color:#d9534f] border-[color:#d9534f]"
             onClick={() => deleteMutation.mutate()}
             disabled={deleteMutation.isPending}
           >
