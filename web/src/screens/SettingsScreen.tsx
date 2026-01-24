@@ -1,22 +1,45 @@
+import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
 import { Card } from "@/shared/ui/Card";
 import { Input } from "@/shared/ui/Input";
 import { Button } from "@/shared/ui/Button";
 import { normalizeTimeInput } from "@/shared/utils/date";
+import {
+  getScheduleSlots,
+  resetScheduleSlots,
+  updateScheduleSlots,
+} from "@/services/api/schedule";
 
-const weekdays = [
-  { id: 0, label: "Пн" },
-  { id: 1, label: "Вт" },
-  { id: 2, label: "Ср" },
-  { id: 3, label: "Чт" },
-  { id: 4, label: "Пт" },
-  { id: 5, label: "Сб" },
-  { id: 6, label: "Вс" },
-];
+const weekdayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
 
 const SettingsScreen = () => {
   const settings = useSettingsStore();
+  const queryClient = useQueryClient();
+  const [slotsOpen, setSlotsOpen] = useState(false);
+
+  const { data: slotsData } = useQuery({
+    queryKey: ["schedule", "slots"],
+    queryFn: getScheduleSlots,
+  });
+  const slots = slotsData?.slots ?? {};
+
+  const saveSlotsMutation = useMutation({
+    mutationFn: () => updateScheduleSlots({ slots }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedule", "slots"] }),
+  });
+
+  const resetSlotsMutation = useMutation({
+    mutationFn: resetScheduleSlots,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedule", "slots"] }),
+  });
+
+  const updateSlotValue = (key: string, value: string) => {
+    queryClient.setQueryData(["schedule", "slots"], {
+      slots: { ...slots, [key]: value },
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -72,46 +95,41 @@ const SettingsScreen = () => {
           </div>
           <div className="mt-1 text-xs text-hint">Сколько минут между слотами.</div>
         </div>
+      </Card>
 
-        <div>
-          <div className="text-xs text-hint">Выходные</div>
-          <div className="mt-2 flex flex-wrap gap-2">
-            {weekdays.map((day) => {
-              const active = settings.weekendDays.includes(day.id);
-              return (
-                <Button
-                  key={day.id}
-                  variant={active ? "primary" : "secondary"}
-                  onClick={() => {
-                    const next = active
-                      ? settings.weekendDays.filter((id) => id !== day.id)
-                      : [...settings.weekendDays, day.id];
-                    settings.update({ weekendDays: next });
-                  }}
-                >
-                  {day.label}
-                </Button>
-              );
-            })}
-          </div>
-          <div className="mt-1 text-xs text-hint">Подсветка выходных в календаре.</div>
-        </div>
-
-        <div>
-          <div className="text-xs text-hint">Формат времени</div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {(["24h", "12h"] as const).map((format) => (
-              <Button
-                key={format}
-                variant={settings.timeFormat === format ? "primary" : "secondary"}
-                onClick={() => settings.update({ timeFormat: format })}
-              >
-                {format === "24h" ? "24 часа" : "12 часов"}
+      <Card className="space-y-3">
+        <button
+          className="flex w-full items-center justify-between text-left"
+          onClick={() => setSlotsOpen((prev) => !prev)}
+        >
+          <div className="text-sm font-semibold">Временные слоты</div>
+          <span className="text-sm text-hint">{slotsOpen ? "Скрыть" : "Показать"}</span>
+        </button>
+        {slotsOpen && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              {weekdayLabels.map((label, idx) => (
+                <div key={label}>
+                  <div className="text-xs text-hint">{label}</div>
+                  <Input
+                    value={slots[idx] ?? ""}
+                    onChange={(event) => updateSlotValue(String(idx), event.target.value)}
+                    placeholder="11:00,14:00,17:00"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="text-xs text-hint">Формат: 11:00,14:00,17:00</div>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={() => saveSlotsMutation.mutate()}>
+                Сохранить
               </Button>
-            ))}
+              <Button variant="secondary" onClick={() => resetSlotsMutation.mutate()}>
+                Сбросить
+              </Button>
+            </div>
           </div>
-          <div className="mt-1 text-xs text-hint">Отображение времени в UI.</div>
-        </div>
+        )}
       </Card>
     </div>
   );

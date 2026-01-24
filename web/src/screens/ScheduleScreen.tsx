@@ -2,16 +2,12 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/shared/ui/Button";
 import { Card } from "@/shared/ui/Card";
-import { Input } from "@/shared/ui/Input";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
 import { buildMonthGrid, getMonthLabel, toLocalIsoMonth } from "@/shared/utils/date";
 import {
   generateScheduleMessage,
-  getScheduleSlots,
   getSelectedDays,
-  resetScheduleSlots,
   toggleSelectedDay,
-  updateScheduleSlots,
 } from "@/services/api/schedule";
 
 const weekdayLabels = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"];
@@ -31,12 +27,6 @@ const ScheduleScreen = () => {
     queryFn: () => getSelectedDays(year, month),
   });
 
-  const { data: slotsData } = useQuery({
-    queryKey: ["schedule", "slots"],
-    queryFn: getScheduleSlots,
-  });
-
-  const slots = slotsData?.slots ?? {};
   const selectedDays = new Set(selectedData?.days ?? []);
 
   const toggleMutation = useMutation({
@@ -46,26 +36,10 @@ const ScheduleScreen = () => {
     },
   });
 
-  const saveSlotsMutation = useMutation({
-    mutationFn: () => updateScheduleSlots({ slots }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedule", "slots"] }),
-  });
-
-  const resetSlotsMutation = useMutation({
-    mutationFn: resetScheduleSlots,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedule", "slots"] }),
-  });
-
   const generateMutation = useMutation({
-    mutationFn: () => generateScheduleMessage(year, month, slots),
+    mutationFn: () => generateScheduleMessage(year, month),
     onSuccess: (data) => setMessage(data.lines ?? []),
   });
-
-  const updateSlotValue = (key: string, value: string) => {
-    queryClient.setQueryData(["schedule", "slots"], {
-      slots: { ...slots, [key]: value },
-    });
-  };
 
   const goMonth = (delta: number) => {
     const date = new Date(year, monthIndex + delta, 1);
@@ -115,31 +89,6 @@ const ScheduleScreen = () => {
           })}
         </div>
         <div className="text-xs text-hint">Нажимай на дни, чтобы отметить рабочие.</div>
-      </Card>
-
-      <Card className="space-y-3">
-        <div className="text-sm font-semibold">Временные слоты</div>
-        <div className="grid grid-cols-2 gap-3">
-          {weekdayLabels.map((label, idx) => (
-            <div key={label}>
-              <div className="text-xs text-hint">{label}</div>
-              <Input
-                value={slots[idx] ?? ""}
-                onChange={(event) => updateSlotValue(String(idx), event.target.value)}
-                placeholder="11:00,14:00,17:00"
-              />
-            </div>
-          ))}
-        </div>
-        <div className="text-xs text-hint">Формат: 11:00,14:00,17:00</div>
-        <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => saveSlotsMutation.mutate()}>
-            Сохранить
-          </Button>
-          <Button variant="secondary" onClick={() => resetSlotsMutation.mutate()}>
-            Сбросить
-          </Button>
-        </div>
       </Card>
 
       <Card className="space-y-3">
