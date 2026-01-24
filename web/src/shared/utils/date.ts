@@ -50,3 +50,28 @@ export const getWeekDays = (isoDate: string) => {
     return current.toISOString().slice(0, 10);
   });
 };
+
+export const getMonthLabel = (year: number, monthIndex: number) =>
+  new Intl.DateTimeFormat("ru-RU", { month: "long", year: "numeric" }).format(
+    new Date(year, monthIndex, 1),
+  );
+
+export const buildMonthGrid = (year: number, monthIndex: number) => {
+  const first = new Date(year, monthIndex, 1);
+  const last = new Date(year, monthIndex + 1, 0);
+  const firstWeekday = (first.getDay() + 6) % 7;
+  const totalDays = last.getDate();
+  const grid: Array<{ day: number; iso: string } | null> = [];
+
+  for (let i = 0; i < firstWeekday; i += 1) {
+    grid.push(null);
+  }
+  for (let day = 1; day <= totalDays; day += 1) {
+    const iso = new Date(year, monthIndex, day).toISOString().slice(0, 10);
+    grid.push({ day, iso });
+  }
+  while (grid.length % 7 !== 0) {
+    grid.push(null);
+  }
+  return grid;
+};

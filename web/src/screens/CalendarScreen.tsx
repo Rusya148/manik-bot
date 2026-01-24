@@ -1,11 +1,17 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getClientsByDay } from "@/services/api/clients";
+import { getClientsByDay, getMarkedDays } from "@/services/api/clients";
 import { useAppStore } from "@/stores/useAppStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { Button } from "@/shared/ui/Button";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
-import { addDays, buildTimeSlots, formatDateTitle, getWeekDays } from "@/shared/utils/date";
+import {
+  addDays,
+  buildMonthGrid,
+  buildTimeSlots,
+  formatDateTitle,
+  getMonthLabel,
+} from "@/shared/utils/date";
 import { Timeline } from "@/features/calendar/Timeline";
 import { Booking } from "@/types/domain";
 
@@ -14,11 +20,28 @@ const CalendarScreen = () => {
   const setSelectedDate = useAppStore((state) => state.setSelectedDate);
   const openBooking = useAppStore((state) => state.openBooking);
   const settings = useSettingsStore();
+  const [cursor, setCursor] = useState(() => selectedDate.slice(0, 7));
+
+  useEffect(() => {
+    const month = selectedDate.slice(0, 7);
+    if (month !== cursor) setCursor(month);
+  }, [cursor, selectedDate]);
 
   const { data, isLoading } = useQuery({
     queryKey: ["clients", "day", selectedDate],
     queryFn: () => getClientsByDay(selectedDate),
   });
+
+  const [year, month] = cursor.split("-").map(Number);
+  const monthIndex = month - 1;
+  const grid = useMemo(() => buildMonthGrid(year, monthIndex), [monthIndex, year]);
+
+  const { data: markedDays } = useQuery({
+    queryKey: ["clients", "marked-days", year, month],
+    queryFn: () => getMarkedDays(year, month),
+  });
+
+  const markedSet = new Set(markedDays?.days ?? []);
 
   const bookings = useMemo<Booking[]>(
     () =>
@@ -26,7 +49,7 @@ const CalendarScreen = () => {
         .map((item) => ({
           id: item.id,
           name: item.name,
-          phone: item.link,
+          link: item.link,
           time: item.time,
           date: item.date,
           prepaymentDisplay: item.prepayment_display ?? undefined,
@@ -39,8 +62,6 @@ const CalendarScreen = () => {
     () => buildTimeSlots(settings.workdayStart, settings.workdayEnd, settings.slotStepMinutes),
     [settings.workdayEnd, settings.workdayStart, settings.slotStepMinutes],
   );
-
-  const weekDays = useMemo(() => getWeekDays(selectedDate), [selectedDate]);
 
   return (
     <div className="space-y-4">
@@ -74,27 +95,57 @@ const CalendarScreen = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-7 gap-2">
-        {weekDays.map((day) => {
-          const isActive = day === selectedDate;
-          const weekday = new Date(`${day}T00:00:00`).getDay();
-          const isWeekend = settings.weekendDays.includes((weekday + 6) % 7);
-          return (
-            <button
-              key={day}
-              className={`rounded-2xl px-2 py-2 text-xs ${
-                isActive
-                  ? "bg-accent text-[var(--app-accent-text)]"
-                  : isWeekend
-                    ? "bg-[color:var(--app-card)] text-accent"
-                    : "bg-[color:var(--app-card)] text-hint"
-              }`}
-              onClick={() => setSelectedDate(day)}
+      <div className="card p-4 space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="text-sm font-semibold">{getMonthLabel(year, monthIndex)}</div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="secondary"
+              onClick={() => {
+                const date = new Date(year, monthIndex - 1, 1);
+                setCursor(date.toISOString().slice(0, 7));
+              }}
             >
-              {day.slice(8, 10)}
-            </button>
-          );
-        })}
+              ←
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                const date = new Date(year, monthIndex + 1, 1);
+                setCursor(date.toISOString().slice(0, 7));
+              }}
+            >
+              →
+            </Button>
+          </div>
+        </div>
+        <div className="grid grid-cols-7 gap-2 text-center text-xs text-hint">
+          {["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"].map((label) => (
+            <div key={label}>{label}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 gap-2">
+          {grid.map((cell, idx) => {
+            if (!cell) return <div key={`empty-${idx}`} className="h-10" />;
+            const isActive = cell.iso === selectedDate;
+            const isMarked = markedSet.has(cell.day);
+            return (
+              <button
+                key={cell.iso}
+                className={`h-10 rounded-2xl text-sm ${
+                  isActive
+                    ? "bg-accent text-[var(--app-accent-text)]"
+                    : isMarked
+                      ? "bg-[color:var(--app-bg)] text-accent"
+                      : "bg-[color:var(--app-bg)] text-hint"
+                }`}
+                onClick={() => setSelectedDate(cell.iso)}
+              >
+                {cell.day}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {isLoading ? (

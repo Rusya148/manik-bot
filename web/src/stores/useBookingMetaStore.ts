@@ -8,8 +8,8 @@ type BookingMetaState = {
   clearMeta: (key: string) => void;
 };
 
-export const buildBookingKey = (date: string, time: string, phone: string) =>
-  `${date}__${time}__${phone}`;
+export const buildBookingKey = (date: string, time: string, link: string) =>
+  `${date}__${time}__${link}`;
 
 export const useBookingMetaStore = create<BookingMetaState>()(
   persist(

@@ -68,7 +68,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
     time: "",
     durationMinutes: services[0]?.durationMinutes ?? 60,
     name: "",
-    phone: "",
+    link: "",
     comment: "",
     prepayment: "",
   });
@@ -88,7 +88,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
         time: editing.time,
         durationMinutes,
         name: editing.name,
-        phone: editing.link,
+        link: editing.link,
         comment: meta?.comment ?? "",
         prepayment: editing.prepayment ? String(editing.prepayment) : "",
       });
@@ -102,7 +102,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
       time: rounded || draftTime || "",
       durationMinutes: defaultService?.durationMinutes ?? 60,
       name: "",
-      phone: "",
+      link: "",
       comment: "",
       prepayment: "",
     });
@@ -112,7 +112,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
     mutationFn: async () => {
       const payload = {
         name: form.name.trim(),
-        link: form.phone.trim(),
+        link: form.link.trim(),
         time: form.time.trim(),
         date: form.date,
         prepayment: form.prepayment ? Number(form.prepayment) : 0,
@@ -123,7 +123,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
       return createClient(payload);
     },
     onSuccess: () => {
-      const key = buildBookingKey(form.date, form.time, form.phone);
+      const key = buildBookingKey(form.date, form.time, form.link);
       setMeta(key, {
         serviceId: form.serviceId,
         durationMinutes: Number(form.durationMinutes) || 0,
@@ -139,9 +139,9 @@ const BookingSheet = ({ open, onClose }: Props) => {
   });
 
   const handleSubmit = useCallback(() => {
-    if (!form.name.trim() || !form.phone.trim() || !form.time.trim()) return;
+    if (!form.name.trim() || !form.link.trim() || !form.time.trim()) return;
     mutation.mutate();
-  }, [form.name, form.phone, form.time, mutation]);
+  }, [form.name, form.link, form.time, mutation]);
 
   useEffect(() => {
     if (!open || !webApp) return;
@@ -164,12 +164,12 @@ const BookingSheet = ({ open, onClose }: Props) => {
   }, [editing, handleSubmit, onClose, open, webApp]);
 
   useEffect(() => {
-    if (!form.phone || form.name) return;
-    const match = knownClients?.find((client) => client.link === form.phone);
+    if (!form.link || form.name) return;
+    const match = knownClients?.find((client) => client.link === form.link);
     if (match) {
       setForm((prev) => ({ ...prev, name: match.name }));
     }
-  }, [form.name, form.phone, knownClients]);
+  }, [form.name, form.link, knownClients]);
 
   const handleServiceChange = (serviceId: string) => {
     const service = services.find((item) => item.id === serviceId);
@@ -201,6 +201,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
               </option>
             ))}
           </select>
+          <div className="mt-1 text-xs text-hint">Выберите услугу из списка.</div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -210,6 +211,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
               value={form.date}
               onChange={(event) => setForm((prev) => ({ ...prev, date: event.target.value }))}
             />
+            <div className="mt-1 text-xs text-hint">День записи клиента.</div>
           </div>
           <div>
             <div className="text-xs text-hint">Время</div>
@@ -218,6 +220,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
               value={form.time}
               onChange={(event) => setForm((prev) => ({ ...prev, time: event.target.value }))}
             />
+            <div className="mt-1 text-xs text-hint">Время начала услуги.</div>
           </div>
         </div>
         <div>
@@ -232,6 +235,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
               }))
             }
           />
+          <div className="mt-1 text-xs text-hint">Можно изменить длительность вручную.</div>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
@@ -242,14 +246,16 @@ const BookingSheet = ({ open, onClose }: Props) => {
               onChange={(event) => setForm((prev) => ({ ...prev, name: event.target.value }))}
               placeholder="Анна"
             />
+            <div className="mt-1 text-xs text-hint">Имя клиента для карточки.</div>
           </div>
           <div>
-            <div className="text-xs text-hint">Телефон</div>
+            <div className="text-xs text-hint">Ссылка на Telegram</div>
             <Input
-              value={form.phone}
-              onChange={(event) => setForm((prev) => ({ ...prev, phone: event.target.value }))}
-              placeholder="+7 900 000-00-00"
+              value={form.link}
+              onChange={(event) => setForm((prev) => ({ ...prev, link: event.target.value }))}
+              placeholder="@username"
             />
+            <div className="mt-1 text-xs text-hint">Например, @client.</div>
           </div>
         </div>
         <div>
@@ -258,6 +264,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
             value={form.comment}
             onChange={(event) => setForm((prev) => ({ ...prev, comment: event.target.value }))}
           />
+          <div className="mt-1 text-xs text-hint">Короткая заметка для себя.</div>
         </div>
         <div>
           <div className="text-xs text-hint">Предоплата</div>
@@ -267,6 +274,7 @@ const BookingSheet = ({ open, onClose }: Props) => {
             onChange={(event) => setForm((prev) => ({ ...prev, prepayment: event.target.value }))}
             placeholder="0"
           />
+          <div className="mt-1 text-xs text-hint">Необязательное поле.</div>
         </div>
         <Button onClick={handleSubmit} disabled={mutation.isPending}>
           {editing ? "Сохранить" : "Создать"}

@@ -1,9 +1,9 @@
-export type ScreenKey = "calendar" | "clients" | "services" | "settings";
+export type ScreenKey = "calendar" | "schedule" | "clients" | "services" | "settings";
 
 export type Booking = {
   id: number;
   name: string;
-  phone: string;
+  link: string;
   time: string;
   date: string;
   prepaymentDisplay?: string;

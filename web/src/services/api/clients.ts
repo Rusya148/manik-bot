@@ -13,6 +13,9 @@ export type ApiClient = {
 export const getClientsByDay = (date: string) =>
   apiFetch<ApiClient[]>(`/api/clients/day?date_iso=${encodeURIComponent(date)}`);
 
+export const getMarkedDays = (year: number, month: number) =>
+  apiFetch<{ days: number[] }>(`/api/clients/marked-days?year=${year}&month=${month}`);
+
 export const getClientsByRange = (start: string, end: string) =>
   apiFetch<ApiClient[]>(
     `/api/clients?start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}`,

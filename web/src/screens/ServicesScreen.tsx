@@ -105,6 +105,7 @@ const ServicesScreen = () => {
               onChange={(event) => setDraft((prev) => ({ ...prev, title: event.target.value }))}
               placeholder="Маникюр + покрытие"
             />
+            <div className="mt-1 text-xs text-hint">Как будет отображаться в записи.</div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
@@ -119,6 +120,7 @@ const ServicesScreen = () => {
                   }))
                 }
               />
+              <div className="mt-1 text-xs text-hint">Используется в записи.</div>
             </div>
             <div>
               <div className="text-xs text-hint">Цена, ₽</div>
@@ -129,6 +131,7 @@ const ServicesScreen = () => {
                   setDraft((prev) => ({ ...prev, price: Number(event.target.value) }))
                 }
               />
+              <div className="mt-1 text-xs text-hint">Только для информации.</div>
             </div>
           </div>
           <Button onClick={handleSave}>

@@ -2,6 +2,7 @@ import { useTelegram } from "@/hooks/useTelegram";
 import { useAppStore } from "@/stores/useAppStore";
 import { TabBar } from "@/shared/ui/TabBar";
 import CalendarScreen from "@/screens/CalendarScreen";
+import ScheduleScreen from "@/screens/ScheduleScreen";
 import ClientsScreen from "@/screens/ClientsScreen";
 import ServicesScreen from "@/screens/ServicesScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
@@ -17,6 +18,7 @@ const App = () => {
   return (
     <div className="app-shell">
       {activeScreen === "calendar" && <CalendarScreen />}
+      {activeScreen === "schedule" && <ScheduleScreen />}
       {activeScreen === "clients" && <ClientsScreen />}
       {activeScreen === "services" && <ServicesScreen />}
       {activeScreen === "settings" && <SettingsScreen />}

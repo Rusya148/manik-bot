@@ -31,12 +31,12 @@ const ClientsScreen = () => {
   });
 
   const grouped = useMemo(() => {
-    const map = new Map<string, { name: string; phone: string; visits: string[]; ids: number[] }>();
+    const map = new Map<string, { name: string; link: string; visits: string[]; ids: number[] }>();
     (data ?? []).forEach((client) => {
       const key = client.link || client.name;
       const entry = map.get(key) ?? {
         name: client.name,
-        phone: client.link,
+        link: client.link,
         visits: [],
         ids: [],
       };
@@ -48,7 +48,7 @@ const ClientsScreen = () => {
       const visits = entry.visits.sort().reverse();
       const latest = visits[0];
       const latestNote = latest
-        ? metaByKey[buildBookingKey(latest.split(" ")[0], latest.split(" ")[1], entry.phone)]
+        ? metaByKey[buildBookingKey(latest.split(" ")[0], latest.split(" ")[1], entry.link)]
         : undefined;
       return {
         ...entry,
@@ -65,7 +65,7 @@ const ClientsScreen = () => {
     return grouped.filter(
       (item) =>
         item.name.toLowerCase().includes(term) ||
-        item.phone.toLowerCase().includes(term),
+        item.link.toLowerCase().includes(term),
     );
   }, [grouped, search]);
 
@@ -79,7 +79,7 @@ const ClientsScreen = () => {
       <Input
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        placeholder="Поиск по имени или телефону"
+        placeholder="Поиск по имени или @username"
       />
 
       {isLoading ? (
@@ -87,11 +87,11 @@ const ClientsScreen = () => {
       ) : (
         <div className="space-y-3">
           {filtered.map((client) => (
-            <Card key={client.phone} className="space-y-3">
+            <Card key={client.link} className="space-y-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <div className="text-sm font-semibold">{client.name}</div>
-                  <div className="text-xs text-hint">{client.phone}</div>
+                  <div className="text-xs text-hint">{client.link}</div>
                 </div>
                 <button
                   className="rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-xs text-accent"

@@ -5,6 +5,7 @@ type Tab = { key: ScreenKey; label: string };
 
 const tabs: Tab[] = [
   { key: "calendar", label: "Календарь" },
+  { key: "schedule", label: "Расписание" },
   { key: "clients", label: "Клиенты" },
   { key: "services", label: "Услуги" },
   { key: "settings", label: "Настройки" },
@@ -22,7 +23,7 @@ export const TabBar = ({ active, onChange }: Props) => (
       "bg-[color:var(--app-card)] px-4 pb-[calc(12px+var(--safe-area-bottom))] pt-2",
     )}
   >
-    <div className="grid grid-cols-4 gap-2 text-center text-xs">
+    <div className="grid grid-cols-5 gap-2 text-center text-xs">
       {tabs.map((tab) => (
         <button
           key={tab.key}

@@ -30,7 +30,7 @@ export const Timeline = ({ slots, bookings, onSlotClick, onBookingClick }: Props
                 <div className="rounded-2xl bg-[color:var(--app-bg)] px-3 py-3">
                   <div className="text-sm font-semibold">{booking.name}</div>
                   <div className="text-xs text-hint">
-                    {booking.phone}
+                    {booking.link}
                     {booking.prepaymentDisplay ? ` · ${booking.prepaymentDisplay}` : ""}
                   </div>
                 </div>

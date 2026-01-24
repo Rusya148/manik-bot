@@ -33,6 +33,7 @@ const SettingsScreen = () => {
               value={settings.workdayStart}
               onChange={(event) => settings.update({ workdayStart: event.target.value })}
             />
+            <div className="mt-1 text-xs text-hint">От этого строятся слоты.</div>
           </div>
           <div>
             <div className="text-xs text-hint">Конец дня</div>
@@ -41,6 +42,7 @@ const SettingsScreen = () => {
               value={settings.workdayEnd}
               onChange={(event) => settings.update({ workdayEnd: event.target.value })}
             />
+            <div className="mt-1 text-xs text-hint">Последний доступный слот.</div>
           </div>
         </div>
 
@@ -57,6 +59,7 @@ const SettingsScreen = () => {
               </Button>
             ))}
           </div>
+          <div className="mt-1 text-xs text-hint">Сколько минут между слотами.</div>
         </div>
 
         <div>
@@ -80,6 +83,7 @@ const SettingsScreen = () => {
               );
             })}
           </div>
+          <div className="mt-1 text-xs text-hint">Подсветка выходных в календаре.</div>
         </div>
 
         <div>
@@ -95,6 +99,7 @@ const SettingsScreen = () => {
               </Button>
             ))}
           </div>
+          <div className="mt-1 text-xs text-hint">Отображение времени в UI.</div>
         </div>
       </Card>
     </div>
