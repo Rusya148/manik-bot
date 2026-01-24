@@ -5,7 +5,7 @@ import { BottomSheet } from "@/shared/ui/BottomSheet";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
 import { Input } from "@/shared/ui/Input";
 import { Card } from "@/shared/ui/Card";
-import { formatDayShort, toLocalIsoDate } from "@/shared/utils/date";
+import { formatDayShort, normalizeTimeInput, toLocalIsoDate } from "@/shared/utils/date";
 
 const getRange = () => {
   const end = new Date();
@@ -135,7 +135,7 @@ const ClientsScreen = () => {
                       className="flex items-center justify-between rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-sm"
                     >
                       <span>{formatDayShort(date)}</span>
-                      <span className="font-medium">{time}</span>
+                      <span className="font-medium">{normalizeTimeInput(time)}</span>
                     </div>
                   );
                 })}

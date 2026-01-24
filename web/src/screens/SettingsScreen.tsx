@@ -32,7 +32,9 @@ const SettingsScreen = () => {
 
   const resetSlotsMutation = useMutation({
     mutationFn: resetScheduleSlots,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["schedule", "slots"] }),
+    onSuccess: (data) => {
+      queryClient.setQueryData(["schedule", "slots"], { slots: data.slots });
+    },
   });
 
   const updateSlotValue = (key: string, value: string) => {

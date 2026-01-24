@@ -74,6 +74,8 @@ const BookingSheet = ({ open, onClose }: Props) => {
   });
   const [timeError, setTimeError] = useState<string | null>(null);
   const [nameTouched, setNameTouched] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -135,7 +137,12 @@ const BookingSheet = ({ open, onClose }: Props) => {
   });
 
   const handleSubmit = useCallback(() => {
-    if (!form.name.trim() || !form.link.trim() || !form.time.trim()) return;
+    const nameEmpty = !form.name.trim();
+    const linkEmpty = !form.link.trim();
+    const timeEmpty = !form.time.trim();
+    setNameError(nameEmpty ? "Введите имя." : null);
+    setLinkError(linkEmpty ? "Введите ссылку на Telegram." : null);
+    if (nameEmpty || linkEmpty || timeEmpty) return;
     if (timeError || form.time.length !== 5) return;
     mutation.mutate();
   }, [form.name, form.link, form.time, mutation, timeError]);
@@ -233,24 +240,38 @@ const BookingSheet = ({ open, onClose }: Props) => {
               value={form.name}
               onChange={(event) => {
                 setNameTouched(true);
+                if (nameError) setNameError(null);
                 setForm((prev) => ({ ...prev, name: event.target.value }));
               }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") (event.currentTarget as HTMLInputElement).blur();
               }}
+              onBlur={(event) => {
+                if (!event.target.value.trim()) setNameError("Введите имя.");
+              }}
               placeholder="Анна"
             />
+            {nameError && <div className="mt-1 text-xs text-[color:#d9534f]">{nameError}</div>}
           </div>
           <div>
             <div className="text-xs text-hint">Ссылка на Telegram</div>
             <Input
               value={form.link}
-              onChange={(event) => setForm((prev) => ({ ...prev, link: event.target.value }))}
+              onChange={(event) => {
+                if (linkError) setLinkError(null);
+                setForm((prev) => ({ ...prev, link: event.target.value }));
+              }}
               onKeyDown={(event) => {
                 if (event.key === "Enter") (event.currentTarget as HTMLInputElement).blur();
               }}
+              onBlur={(event) => {
+                if (!event.target.value.trim()) {
+                  setLinkError("Введите ссылку на Telegram.");
+                }
+              }}
               placeholder="@username"
             />
+            {linkError && <div className="mt-1 text-xs text-[color:#d9534f]">{linkError}</div>}
           </div>
         </div>
         <div>
