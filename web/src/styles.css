@@ -84,6 +84,7 @@ body {
   border-radius: 12px;
   padding: 12px 14px;
   color: var(--app-text);
+  font-size: 16px;
 }
 
 .input-base::placeholder {

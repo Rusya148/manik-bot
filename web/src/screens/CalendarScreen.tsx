@@ -14,6 +14,7 @@ import {
   getMonthLabel,
   toLocalIsoDate,
   toLocalIsoMonth,
+  normalizeTimeInput,
 } from "@/shared/utils/date";
 import { Timeline } from "@/features/calendar/Timeline";
 import { Booking } from "@/types/domain";
@@ -60,7 +61,7 @@ const CalendarScreen = () => {
           id: item.id,
           name: item.name,
           link: item.link,
-          time: item.time,
+          time: normalizeTimeInput(item.time),
           date: item.date,
           prepaymentDisplay: item.prepayment_display ?? undefined,
         }))
@@ -172,6 +173,9 @@ const CalendarScreen = () => {
           onBookingClick={(bookingId) => openBooking({ bookingId })}
         />
       )}
+      <div className="text-xs text-hint">
+        Время можно вводить как 10:00, 10.00 или 10-00.
+      </div>
 
       <Button className="w-full" variant="secondary" onClick={() => setTodayOpen(true)}>
         Записи на сегодня
@@ -186,13 +190,15 @@ const CalendarScreen = () => {
           {todayClients?.length ? (
             todayClients
               .slice()
-              .sort((a, b) => a.time.localeCompare(b.time))
+              .sort((a, b) =>
+                normalizeTimeInput(a.time).localeCompare(normalizeTimeInput(b.time)),
+              )
               .map((client) => (
                 <div
                   key={`${client.id}-${client.time}`}
                   className="rounded-xl bg-[color:var(--app-bg)] px-3 py-2"
                 >
-                  <div className="font-medium">{client.time}</div>
+                  <div className="font-medium">{normalizeTimeInput(client.time)}</div>
                   <div className="text-xs text-hint">{client.name}</div>
                   <div className="text-xs text-hint">{client.link}</div>
                 </div>
