@@ -46,7 +46,8 @@ const ScheduleScreen = () => {
     setCursor(toLocalIsoMonth(date));
   };
 
-  const toStrikethrough = (value: string) => `~~${value}~~`;
+  const strikeTimesOnly = (value: string) =>
+    value.replace(/\b\d{1,2}[.:]\d{2}\b/g, (match) => `~~${match}~~`);
 
   return (
     <div className="space-y-4">
@@ -124,7 +125,7 @@ const ScheduleScreen = () => {
                   message
                     .map((line) =>
                       line
-                        .replace(/<s>(.*?)<\/s>/g, (_, text) => toStrikethrough(text))
+                        .replace(/<s>(.*?)<\/s>/g, (_, text) => strikeTimesOnly(text))
                         .replace(/<\/?s>/g, ""),
                     )
                     .join("\n"),
