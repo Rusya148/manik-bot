@@ -46,11 +46,7 @@ const ScheduleScreen = () => {
     setCursor(toLocalIsoMonth(date));
   };
 
-  const toStrikethrough = (value: string) =>
-    value
-      .split("")
-      .map((char) => `${char}\u0336`)
-      .join("");
+  const toStrikethrough = (value: string) => `~~${value}~~`;
 
   return (
     <div className="space-y-4">
