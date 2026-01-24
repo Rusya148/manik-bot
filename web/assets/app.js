@@ -508,6 +508,7 @@ const setupSchedule = () => {
   const applyButton = document.getElementById("schedule-apply");
   const dayTitle = document.getElementById("schedule-day-title");
   const dayClients = document.getElementById("schedule-day-clients");
+  let activeScheduleDayIso = null;
   const slotsCard = document.getElementById("schedule-slots");
   const slotsToggle = document.getElementById("slots-toggle");
   const slotInputs = {
@@ -596,24 +597,31 @@ const setupSchedule = () => {
         async (day, _iso, cell) => {
           const dateIso = `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
           try {
-            const booked = await apiFetch(`/clients/day?date_iso=${dateIso}`);
-            if (dayTitle) {
-              dayTitle.textContent = `Записи на ${formatDateDisplay(dateIso)}`;
-            }
-            if (dayClients) {
-              renderClients(dayClients, booked);
-            }
-          } catch (error) {
-            showToast(error.message, true);
-          }
-          try {
             if (cell) {
               cell.classList.toggle("selected");
             }
-            await apiFetch("/schedule/toggle", {
+            const toggleResult = await apiFetch("/schedule/toggle", {
               method: "POST",
               body: JSON.stringify({ year, month, day }),
             });
+            if (toggleResult.selected) {
+              activeScheduleDayIso = dateIso;
+              const booked = await apiFetch(`/clients/day?date_iso=${dateIso}`);
+              if (dayTitle) {
+                dayTitle.textContent = `Записи на ${formatDateDisplay(dateIso)}`;
+              }
+              if (dayClients) {
+                renderClients(dayClients, booked);
+              }
+            } else {
+              activeScheduleDayIso = null;
+              if (dayTitle) {
+                dayTitle.textContent = "Выберите день.";
+              }
+              if (dayClients) {
+                dayClients.textContent = "";
+              }
+            }
             loadMonth();
           } catch (error) {
             showToast(error.message, true);
@@ -625,12 +633,6 @@ const setupSchedule = () => {
         selected.days
       );
       result.textContent = "Выберите дни и нажмите «Сгенерировать».";
-      if (dayTitle) {
-        dayTitle.textContent = "Выберите день.";
-      }
-      if (dayClients) {
-        dayClients.textContent = "";
-      }
     } catch (error) {
       showToast(error.message, true);
     }
@@ -642,6 +644,13 @@ const setupSchedule = () => {
       monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
     }
     monthInput.value = shiftMonthValue(monthInput.value, -1);
+    activeScheduleDayIso = null;
+    if (dayTitle) {
+      dayTitle.textContent = "Выберите день.";
+    }
+    if (dayClients) {
+      dayClients.textContent = "";
+    }
     loadMonth();
   });
   nextButton.addEventListener("click", () => {
@@ -650,6 +659,13 @@ const setupSchedule = () => {
       monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
     }
     monthInput.value = shiftMonthValue(monthInput.value, 1);
+    activeScheduleDayIso = null;
+    if (dayTitle) {
+      dayTitle.textContent = "Выберите день.";
+    }
+    if (dayClients) {
+      dayClients.textContent = "";
+    }
     loadMonth();
   });
   generateButton.addEventListener("click", async () => {
@@ -735,6 +751,12 @@ const setupSchedule = () => {
   if (!monthInput.value) {
     const now = new Date();
     monthInput.value = toMonthValue(now.getFullYear(), now.getMonth() + 1);
+  }
+  if (dayTitle) {
+    dayTitle.textContent = "Выберите день.";
+  }
+  if (dayClients) {
+    dayClients.textContent = "";
   }
   loadSlots();
   loadMonth();
