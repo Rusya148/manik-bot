@@ -26,6 +26,22 @@ export const toLocalIsoMonth = (date: Date) => {
   return `${yyyy}-${mm}`;
 };
 
+export const normalizeTimeInput = (value: string) => {
+  if (!value) return "";
+  let cleaned = value.trim().replace(/[.\-\/\s]/g, ":");
+  if (!cleaned.includes(":")) {
+    cleaned = `${cleaned}:00`;
+  }
+  const parts = cleaned.split(":");
+  const hh = Number.parseInt(parts[0], 10);
+  if (Number.isNaN(hh)) return value.trim();
+  const mmRaw = parts[1] ?? "0";
+  const mm = Number.parseInt(mmRaw, 10);
+  const hhClamped = Math.min(23, Math.max(0, hh));
+  const mmClamped = Number.isNaN(mm) ? 0 : Math.min(59, Math.max(0, mm));
+  return `${String(hhClamped).padStart(2, "0")}:${String(mmClamped).padStart(2, "0")}`;
+};
+
 export const addDays = (isoDate: string, delta: number) => {
   const date = new Date(`${isoDate}T00:00:00`);
   date.setDate(date.getDate() + delta);

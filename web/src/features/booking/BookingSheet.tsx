@@ -10,7 +10,7 @@ import { Input } from "@/shared/ui/Input";
 import { Textarea } from "@/shared/ui/Textarea";
 import { Button } from "@/shared/ui/Button";
 import { createClient, getClientsByDay, getClientsByRange, updateClient } from "@/services/api/clients";
-import { toLocalIsoDate } from "@/shared/utils/date";
+import { normalizeTimeInput, toLocalIsoDate } from "@/shared/utils/date";
 
 type Props = {
   open: boolean;
@@ -217,9 +217,14 @@ const BookingSheet = ({ open, onClose }: Props) => {
           <div>
             <div className="text-xs text-hint">Время</div>
             <Input
-              type="time"
+              type="text"
+              inputMode="numeric"
               value={form.time}
               onChange={(event) => setForm((prev) => ({ ...prev, time: event.target.value }))}
+              onBlur={(event) =>
+                setForm((prev) => ({ ...prev, time: normalizeTimeInput(event.target.value) }))
+              }
+              placeholder="10:00"
             />
             <div className="mt-1 text-xs text-hint">Время начала услуги.</div>
           </div>

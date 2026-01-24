@@ -3,6 +3,7 @@ import { SectionTitle } from "@/shared/ui/SectionTitle";
 import { Card } from "@/shared/ui/Card";
 import { Input } from "@/shared/ui/Input";
 import { Button } from "@/shared/ui/Button";
+import { normalizeTimeInput } from "@/shared/utils/date";
 
 const weekdays = [
   { id: 0, label: "Пн" },
@@ -29,18 +30,28 @@ const SettingsScreen = () => {
           <div>
             <div className="text-xs text-hint">Начало дня</div>
             <Input
-              type="time"
+              type="text"
+              inputMode="numeric"
               value={settings.workdayStart}
               onChange={(event) => settings.update({ workdayStart: event.target.value })}
+              onBlur={(event) =>
+                settings.update({ workdayStart: normalizeTimeInput(event.target.value) })
+              }
+              placeholder="10:00"
             />
             <div className="mt-1 text-xs text-hint">От этого строятся слоты.</div>
           </div>
           <div>
             <div className="text-xs text-hint">Конец дня</div>
             <Input
-              type="time"
+              type="text"
+              inputMode="numeric"
               value={settings.workdayEnd}
               onChange={(event) => settings.update({ workdayEnd: event.target.value })}
+              onBlur={(event) =>
+                settings.update({ workdayEnd: normalizeTimeInput(event.target.value) })
+              }
+              placeholder="20:00"
             />
             <div className="mt-1 text-xs text-hint">Последний доступный слот.</div>
           </div>

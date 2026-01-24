@@ -147,9 +147,25 @@ const ScheduleScreen = () => {
         <Button onClick={() => generateMutation.mutate()}>Сгенерировать</Button>
         {message.length > 0 && (
           <div className="space-y-2 text-sm">
-            {message.map((line, idx) => (
-              <div key={`${line}-${idx}`}>{line || " "}</div>
-            ))}
+            {message.map((line, idx) => {
+              if (!line) return <div key={`empty-${idx}`}>&nbsp;</div>;
+              const parts = line.split(/(<s>.*?<\/s>)/g);
+              return (
+                <div key={`${line}-${idx}`}>
+                  {parts.map((part, partIdx) => {
+                    if (part.startsWith("<s>") && part.endsWith("</s>")) {
+                      const text = part.replace("<s>", "").replace("</s>", "");
+                      return (
+                        <span key={`${part}-${partIdx}`} className="line-through text-hint">
+                          {text}
+                        </span>
+                      );
+                    }
+                    return <span key={`${part}-${partIdx}`}>{part}</span>;
+                  })}
+                </div>
+              );
+            })}
             <button
               className="text-xs text-accent"
               onClick={() => navigator.clipboard?.writeText(message.join("\n"))}

@@ -5,6 +5,7 @@ import { useAppStore } from "@/stores/useAppStore";
 import { useSettingsStore } from "@/stores/useSettingsStore";
 import { Button } from "@/shared/ui/Button";
 import { SectionTitle } from "@/shared/ui/SectionTitle";
+import { BottomSheet } from "@/shared/ui/BottomSheet";
 import {
   addDays,
   buildMonthGrid,
@@ -23,6 +24,7 @@ const CalendarScreen = () => {
   const openBooking = useAppStore((state) => state.openBooking);
   const settings = useSettingsStore();
   const [cursor, setCursor] = useState(() => selectedDate.slice(0, 7));
+  const [todayOpen, setTodayOpen] = useState(false);
 
   useEffect(() => {
     const month = selectedDate.slice(0, 7);
@@ -32,6 +34,12 @@ const CalendarScreen = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["clients", "day", selectedDate],
     queryFn: () => getClientsByDay(selectedDate),
+  });
+
+  const todayIso = toLocalIsoDate(new Date());
+  const { data: todayClients } = useQuery({
+    queryKey: ["clients", "day", todayIso],
+    queryFn: () => getClientsByDay(todayIso),
   });
 
   const [year, month] = cursor.split("-").map(Number);
@@ -131,13 +139,14 @@ const CalendarScreen = () => {
             if (!cell) return <div key={`empty-${idx}`} className="h-10" />;
             const isActive = cell.iso === selectedDate;
             const isMarked = markedSet.has(cell.day);
+            const isToday = cell.iso === todayIso;
             return (
               <button
                 key={cell.iso}
                 className={`h-10 rounded-2xl text-sm ${
                   isActive
                     ? "bg-accent text-[var(--app-accent-text)]"
-                    : isMarked
+                    : isMarked || isToday
                       ? "bg-[color:var(--app-bg)] text-accent"
                       : "bg-[color:var(--app-bg)] text-hint"
                 }`}
@@ -148,6 +157,9 @@ const CalendarScreen = () => {
             );
           })}
         </div>
+        {!!todayClients?.length && (
+          <div className="text-xs text-accent">Сегодня есть записи.</div>
+        )}
       </div>
 
       {isLoading ? (
@@ -160,6 +172,36 @@ const CalendarScreen = () => {
           onBookingClick={(bookingId) => openBooking({ bookingId })}
         />
       )}
+
+      <Button className="w-full" variant="secondary" onClick={() => setTodayOpen(true)}>
+        Записи на сегодня
+      </Button>
+
+      <BottomSheet
+        open={todayOpen}
+        onClose={() => setTodayOpen(false)}
+        title="Сегодняшние записи"
+      >
+        <div className="space-y-2 text-sm">
+          {todayClients?.length ? (
+            todayClients
+              .slice()
+              .sort((a, b) => a.time.localeCompare(b.time))
+              .map((client) => (
+                <div
+                  key={`${client.id}-${client.time}`}
+                  className="rounded-xl bg-[color:var(--app-bg)] px-3 py-2"
+                >
+                  <div className="font-medium">{client.time}</div>
+                  <div className="text-xs text-hint">{client.name}</div>
+                  <div className="text-xs text-hint">{client.link}</div>
+                </div>
+              ))
+          ) : (
+            <div className="text-xs text-hint">На сегодня записей нет.</div>
+          )}
+        </div>
+      </BottomSheet>
     </div>
   );
 };
