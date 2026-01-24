@@ -46,6 +46,12 @@ const ScheduleScreen = () => {
     setCursor(toLocalIsoMonth(date));
   };
 
+  const toStrikethrough = (value: string) =>
+    value
+      .split("")
+      .map((char) => `${char}\u0336`)
+      .join("");
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -119,7 +125,13 @@ const ScheduleScreen = () => {
               className="text-xs text-accent"
               onClick={() =>
                 navigator.clipboard?.writeText(
-                  message.map((line) => line.replace(/<\/?s>/g, "")).join("\n"),
+                  message
+                    .map((line) =>
+                      line
+                        .replace(/<s>(.*?)<\/s>/g, (_, text) => toStrikethrough(text))
+                        .replace(/<\/?s>/g, ""),
+                    )
+                    .join("\n"),
                 )
                   .then(() =>
                     window.dispatchEvent(
