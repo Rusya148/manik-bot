@@ -116,28 +116,30 @@ const ScheduleScreen = () => {
         <div className="text-sm font-semibold">Сообщение для отправки</div>
         <Button onClick={() => generateMutation.mutate()}>Сгенерировать</Button>
         {message.length > 0 && (
-          <div className="space-y-2 text-sm" ref={messageRef}>
-            {message.map((line, idx) => {
-              if (!line) return <div key={`empty-${idx}`}>&nbsp;</div>;
-              const parts = line.split(/(<s>.*?<\/s>)/g);
-              return (
-                <div key={`${line}-${idx}`}>
-                  {parts.map((part, partIdx) => {
-                    if (part.startsWith("<s>") && part.endsWith("</s>")) {
-                      const text = part.replace("<s>", "").replace("</s>", "");
-                      return (
-                        <span key={`${part}-${partIdx}`} className="line-through text-hint">
-                          {text}
-                        </span>
-                      );
-                    }
-                    return <span key={`${part}-${partIdx}`}>{part}</span>;
-                  })}
-                </div>
-              );
-            })}
+          <>
+            <div className="space-y-2 text-sm" ref={messageRef}>
+              {message.map((line, idx) => {
+                if (!line) return <div key={`empty-${idx}`}>&nbsp;</div>;
+                const parts = line.split(/(<s>.*?<\/s>)/g);
+                return (
+                  <div key={`${line}-${idx}`}>
+                    {parts.map((part, partIdx) => {
+                      if (part.startsWith("<s>") && part.endsWith("</s>")) {
+                        const text = part.replace("<s>", "").replace("</s>", "");
+                        return (
+                          <span key={`${part}-${partIdx}`} className="line-through text-hint">
+                            {text}
+                          </span>
+                        );
+                      }
+                      return <span key={`${part}-${partIdx}`}>{part}</span>;
+                    })}
+                  </div>
+                );
+              })}
+            </div>
             <button
-              className="text-xs text-accent"
+              className="select-none text-xs text-accent"
               onClick={() => {
                 const html = buildHtmlMessage();
                 const text = html.replace(/<\/?s>/g, "");
@@ -155,7 +157,7 @@ const ScheduleScreen = () => {
             >
               Отправить в Telegram
             </button>
-          </div>
+          </>
         )}
       </Card>
     </div>
