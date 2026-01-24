@@ -142,14 +142,16 @@ const ScheduleScreen = () => {
                       "text/html": new Blob([normalized], { type: "text/html" }),
                     });
                     await navigator.clipboard.write([item]);
-                  } else {
-                    await navigator.clipboard?.writeText(plain);
+                  } else if (navigator.clipboard && "writeText" in navigator.clipboard) {
+                    await navigator.clipboard.writeText(plain);
                   }
                   window.dispatchEvent(
                     new CustomEvent("app:toast", { detail: { message: "Скопировано" } }),
                   );
                 } catch {
-                  await navigator.clipboard?.writeText(plain);
+                  if (navigator.clipboard && "writeText" in navigator.clipboard) {
+                    await navigator.clipboard.writeText(plain);
+                  }
                 }
               }}
             >
