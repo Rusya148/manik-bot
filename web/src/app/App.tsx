@@ -7,6 +7,8 @@ import ScheduleScreen from "@/screens/ScheduleScreen";
 import ClientsScreen from "@/screens/ClientsScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import BookingSheet from "@/features/booking/BookingSheet";
+import { ApiError } from "@/services/api/http";
+import { getAccessStatus } from "@/services/api/access";
 
 const App = () => {
   useTelegram();
@@ -16,6 +18,7 @@ const App = () => {
   const closeBooking = useAppStore((state) => state.closeBooking);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
+  const [accessState, setAccessState] = useState<"loading" | "granted" | "denied">("loading");
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -27,6 +30,42 @@ const App = () => {
     window.addEventListener("app:toast", handler);
     return () => window.removeEventListener("app:toast", handler);
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAccessStatus()
+      .then(() => {
+        if (!cancelled) setAccessState("granted");
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+          setAccessState("denied");
+          return;
+        }
+        setAccessState("denied");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  if (accessState !== "granted") {
+    return (
+      <div className="app-shell flex h-[var(--viewport-height)] items-center justify-center px-6 text-center">
+        <div className="space-y-3">
+          <div className="text-sm text-hint">
+            {accessState === "loading" ? "Проверяем доступ..." : "Нет доступа"}
+          </div>
+          <div className="text-base font-semibold text-[color:var(--tg-text-color)]">
+            {accessState === "loading"
+              ? "Подождите немного"
+              : "Попросите администратора выдать доступ"}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

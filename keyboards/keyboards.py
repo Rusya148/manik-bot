@@ -7,8 +7,6 @@ _kb_start_rows = [
     [KeyboardButton(text='Записать клиента'),
      KeyboardButton(text='Удалить клиента'),
      KeyboardButton(text='Клиенты')],
-    [KeyboardButton(text='Зарплата'),
-     KeyboardButton(text='Траты')],
     [KeyboardButton(text='Календарь'),
      KeyboardButton(text='Расписание')],
 ]
@@ -17,23 +15,6 @@ if webapp_url:
 
 kb_start = ReplyKeyboardMarkup(_kb_start_rows, resize_keyboard=True)
 
-kb_salary = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Добавить', callback_data='add'),
-     InlineKeyboardButton(text='Зарплата', callback_data='salary')]
-])
-
-kb_expenses = InlineKeyboardMarkup(inline_keyboard=[
-    [InlineKeyboardButton(text='Добавить', callback_data='add_expenses'),
-     InlineKeyboardButton(text='Траты', callback_data='expenses')]
-])
-
-def get_continue_keyboard1():
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="Продолжить", callback_data="continue_add_expenses"),
-         InlineKeyboardButton(text="Удалить последнюю сумму", callback_data="remove_last_expenses"),
-        InlineKeyboardButton(text="Отменить", callback_data="cancel_add_expenses")]
-    ])
-
 def get_months_keyboard():
     months = [
         "январь", "февраль", "март", "апрель", "май", "июнь",
@@ -41,16 +22,6 @@ def get_months_keyboard():
     ]
     keyboard = InlineKeyboardMarkup(row_width=3)
     buttons = [InlineKeyboardButton(text=month.capitalize(), callback_data=f"month_{i + 1}") for i, month in enumerate(months)]
-    keyboard.add(*buttons)
-    return keyboard
-
-def get_months_keyboard1():
-    months = [
-        "январь", "февраль", "март", "апрель", "май", "июнь",
-        "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"
-    ]
-    keyboard = InlineKeyboardMarkup(row_width=3)
-    buttons = [InlineKeyboardButton(text=month.capitalize(), callback_data=f"month-{i + 1}") for i, month in enumerate(months)]
     keyboard.add(*buttons)
     return keyboard
 

@@ -1,11 +1,5 @@
-from aiogram import executor
-
-from bot.bot import *
-from bot.register_dp import *
+from app.bot_runner import main
 
 
-if __name__ == '__main__':
-    register(dp)
-    async def on_startup(dp):
-        await bot.delete_webhook(drop_pending_updates=True)
-    executor.start_polling(dp, skip_updates=True, on_startup=on_startup)
+if __name__ == "__main__":
+    main()

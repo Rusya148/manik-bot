@@ -1,0 +1,36 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: manik
+      POSTGRES_USER: manik
+      POSTGRES_PASSWORD: manik
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  api:
+    build: .
+    depends_on:
+      - db
+    env_file: .env
+    command: >
+      sh -c "alembic upgrade head &&
+      uvicorn app.web.app:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+
+  bot:
+    build: .
+    depends_on:
+      - db
+    env_file: .env
+    command: >
+      sh -c "alembic upgrade head &&
+      python -m app.bot_runner"
+
+volumes:
+  postgres_data:
