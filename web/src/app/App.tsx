@@ -18,7 +18,9 @@ const App = () => {
   const closeBooking = useAppStore((state) => state.closeBooking);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<number | null>(null);
-  const [accessState, setAccessState] = useState<"loading" | "granted" | "denied">("loading");
+  const [accessState, setAccessState] = useState<
+    "loading" | "granted" | "denied" | "no_init"
+  >("loading");
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -57,7 +59,7 @@ const App = () => {
       }
       if (attempts >= maxAttempts) {
         window.clearInterval(timer);
-        if (!cancelled) setAccessState("denied");
+        if (!cancelled) setAccessState("no_init");
       }
     }, 100);
     return () => {
@@ -71,12 +73,18 @@ const App = () => {
       <div className="app-shell flex h-[var(--viewport-height)] items-center justify-center px-6 text-center">
         <div className="space-y-3">
           <div className="text-sm text-hint">
-            {accessState === "loading" ? "Проверяем доступ..." : "Нет доступа"}
+            {accessState === "loading"
+              ? "Проверяем доступ..."
+              : accessState === "no_init"
+                ? "Нет данных Telegram WebApp"
+                : "Нет доступа"}
           </div>
           <div className="text-base font-semibold text-[color:var(--tg-text-color)]">
             {accessState === "loading"
               ? "Подождите немного"
-              : "Попросите администратора выдать доступ"}
+              : accessState === "no_init"
+                ? "Откройте через кнопку WebApp в боте"
+                : "Попросите администратора выдать доступ"}
           </div>
         </div>
       </div>
