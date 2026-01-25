@@ -9,3 +9,7 @@ async def ensure_admins(session) -> None:
     for tg_id in settings.admin_ids:
         user = await repo_users.create_or_update(tg_id, None, None, None)
         await repo_admins.promote(user.id, None)
+    for username in settings.admin_usernames:
+        user = await repo_users.get_by_username(username)
+        if user:
+            await repo_admins.promote(user.id, None)

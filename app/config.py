@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     webapp_url: str = ""
     database_url: str
     admin_telegram_ids: str = ""
+    admin_telegram_usernames: str = ""
     webapp_origin: str = "*"
 
     model_config = SettingsConfigDict(env_file=".env", case_sensitive=False)
@@ -23,6 +24,14 @@ class Settings(BaseSettings):
             except ValueError:
                 continue
         return result
+
+    @property
+    def admin_usernames(self) -> set[str]:
+        raw = self.admin_telegram_usernames.strip()
+        if not raw:
+            return set()
+        parts = [p.strip() for p in raw.replace(";", ",").split(",") if p.strip()]
+        return {p.lstrip("@").lower() for p in parts}
 
 
 settings = Settings()
