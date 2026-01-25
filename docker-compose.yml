@@ -8,7 +8,7 @@ services:
       POSTGRES_USER: manik
       POSTGRES_PASSWORD: manik
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -32,5 +32,4 @@ services:
       sh -c "alembic upgrade head &&
       python -m app.bot_runner"
 
-volumes:
-  postgres_data:
+volumes: {}

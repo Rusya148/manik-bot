@@ -8,6 +8,7 @@ declare global {
   }
 
   interface TelegramWebApp {
+    initData?: string;
     initDataUnsafe?: { user?: { id: number; first_name: string } };
     themeParams: Record<string, string>;
     colorScheme: "light" | "dark";
