@@ -9,10 +9,8 @@ from app.db.session import engine
 async def create_tenant_schema(schema_name: str) -> None:
     async with engine.begin() as conn:
         await conn.execute(text(f'CREATE SCHEMA IF NOT EXISTS "{schema_name}"'))
-        await conn.run_sync(
-            BaseTenant.metadata.create_all,
-            schema_translate_map={"tenant": schema_name},
-        )
+        mapped = conn.execution_options(schema_translate_map={"tenant": schema_name})
+        await mapped.run_sync(BaseTenant.metadata.create_all)
 
 
 def schema_for_user(tg_id: int) -> str:
