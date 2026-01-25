@@ -12,6 +12,8 @@ class AccessMiddleware(BaseMiddleware):
     async def on_pre_process_message(self, message: types.Message, data: dict):
         if not message.from_user:
             return
+        if message.text and message.text.startswith(("/start", "/myid")):
+            return
         session = get_async_session()
         try:
             service = AccessService(session)
