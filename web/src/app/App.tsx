@@ -32,26 +32,37 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    const hasInitData =
-      Boolean(webApp?.initData) || window.location.hash.includes("tgWebAppData=");
-    if (!hasInitData) {
-      return;
-    }
     let cancelled = false;
-    getAccessStatus()
-      .then(() => {
-        if (!cancelled) setAccessState("granted");
-      })
-      .catch((error) => {
-        if (cancelled) return;
-        if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-          setAccessState("denied");
-          return;
-        }
-        setAccessState("denied");
-      });
+    let attempts = 0;
+    const maxAttempts = 50;
+    const timer = window.setInterval(() => {
+      attempts += 1;
+      const hasInitData =
+        Boolean(webApp?.initData) || window.location.hash.includes("tgWebAppData=");
+      if (hasInitData) {
+        window.clearInterval(timer);
+        getAccessStatus()
+          .then(() => {
+            if (!cancelled) setAccessState("granted");
+          })
+          .catch((error) => {
+            if (cancelled) return;
+            if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+              setAccessState("denied");
+              return;
+            }
+            setAccessState("denied");
+          });
+        return;
+      }
+      if (attempts >= maxAttempts) {
+        window.clearInterval(timer);
+        if (!cancelled) setAccessState("denied");
+      }
+    }, 100);
     return () => {
       cancelled = true;
+      window.clearInterval(timer);
     };
   }, [webApp]);
 
