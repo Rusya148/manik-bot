@@ -49,6 +49,10 @@ async def get_current_user(
 
     access_service = AccessService(session)
     user = await access_service.ensure_user(tg_id, username, first_name, last_name)
+    username_norm = (username or "").lower()
+    if tg_id in settings.admin_ids or username_norm in settings.admin_usernames:
+        await access_service.admins.promote(user.id, tg_id)
+        await access_service.grant_access(user, tg_id)
     has_access = await access_service.has_access(user.id)
     if not has_access:
         raise HTTPException(status_code=403, detail="Access denied")
