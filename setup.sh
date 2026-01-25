@@ -41,7 +41,7 @@ echo "==> Starting db, api, nginx (HTTP only)..."
 docker-compose up -d db api nginx
 
 echo "==> Requesting сертификат..."
-docker-compose run --rm --entrypoint "" certbot certbot certonly \
+docker-compose run --rm certbot certonly \
   --webroot -w /var/www/certbot \
   -d "$DOMAIN" \
   --email "$EMAIL" \
