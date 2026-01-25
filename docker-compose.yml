@@ -21,7 +21,7 @@ services:
       sh -c "alembic upgrade head &&
       uvicorn app.web.app:app --host 0.0.0.0 --port 8000"
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
 
   bot:
     build: .
@@ -31,5 +31,28 @@ services:
     command: >
       sh -c "alembic upgrade head &&
       python -m app.bot_runner"
+
+  nginx:
+    image: nginx:1.27-alpine
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./data/certbot/www:/var/www/certbot
+      - ./data/certbot/conf:/etc/letsencrypt
+    env_file: .env
+
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./data/certbot/www:/var/www/certbot
+      - ./data/certbot/conf:/etc/letsencrypt
+    entrypoint: >
+      /bin/sh -c "trap exit TERM;
+      while :; do certbot renew --webroot -w /var/www/certbot;
+      sleep 12h & wait $${!}; done"
 
 volumes: {}
