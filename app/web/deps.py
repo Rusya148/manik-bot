@@ -32,8 +32,8 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="Missing init data")
     try:
         data = verify_init_data(init_data, settings.bot_token)
-    except ValueError:
-        raise HTTPException(status_code=401, detail="Invalid init data")
+    except ValueError as exc:
+        raise HTTPException(status_code=401, detail=str(exc))
 
     user_json = data.get("user")
     if not user_json:
