@@ -11,7 +11,7 @@ import { ApiError } from "@/services/api/http";
 import { getAccessStatus } from "@/services/api/access";
 
 const App = () => {
-  useTelegram();
+  const { webApp } = useTelegram();
   const activeScreen = useAppStore((state) => state.activeScreen);
   const setActiveScreen = useAppStore((state) => state.setActiveScreen);
   const bookingOpen = useAppStore((state) => state.bookingOpen);
@@ -32,6 +32,11 @@ const App = () => {
   }, []);
 
   useEffect(() => {
+    const hasInitData =
+      Boolean(webApp?.initData) || window.location.hash.includes("tgWebAppData=");
+    if (!hasInitData) {
+      return;
+    }
     let cancelled = false;
     getAccessStatus()
       .then(() => {
@@ -48,7 +53,7 @@ const App = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [webApp]);
 
   if (accessState !== "granted") {
     return (
