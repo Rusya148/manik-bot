@@ -2,8 +2,10 @@ from aiogram import types
 from aiogram.dispatcher.handler import CancelHandler
 from aiogram.dispatcher.middlewares import BaseMiddleware
 
+from app.config import settings
 from app.db.session import get_async_session
 from app.services.access import AccessService
+from app.services.admin import AdminService
 
 
 class AccessMiddleware(BaseMiddleware):
@@ -13,12 +15,19 @@ class AccessMiddleware(BaseMiddleware):
         session = get_async_session()
         try:
             service = AccessService(session)
+            admin_service = AdminService(session)
             user = await service.ensure_user(
                 message.from_user.id,
                 message.from_user.username,
                 message.from_user.first_name,
                 message.from_user.last_name,
             )
+            username = (message.from_user.username or "").lower()
+            if user.tg_id in settings.admin_ids or username in settings.admin_usernames:
+                await admin_service.promote(user.id, user.tg_id)
+                await service.grant_access(user, user.tg_id)
+                await session.commit()
+                return
             if not await service.has_access(user.id):
                 await message.answer("Доступ запрещён")
                 raise CancelHandler()
@@ -32,12 +41,19 @@ class AccessMiddleware(BaseMiddleware):
         session = get_async_session()
         try:
             service = AccessService(session)
+            admin_service = AdminService(session)
             user = await service.ensure_user(
                 callback_query.from_user.id,
                 callback_query.from_user.username,
                 callback_query.from_user.first_name,
                 callback_query.from_user.last_name,
             )
+            username = (callback_query.from_user.username or "").lower()
+            if user.tg_id in settings.admin_ids or username in settings.admin_usernames:
+                await admin_service.promote(user.id, user.tg_id)
+                await service.grant_access(user, user.tg_id)
+                await session.commit()
+                return
             if not await service.has_access(user.id):
                 await callback_query.answer("Доступ запрещён", show_alert=True)
                 raise CancelHandler()
