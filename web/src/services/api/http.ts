@@ -7,8 +7,18 @@ export class ApiError extends Error {
   }
 }
 
+const getInitData = () => {
+  const direct = window.Telegram?.WebApp?.initData;
+  if (direct) return direct;
+  const hash = window.location.hash?.replace(/^#/, "");
+  if (!hash) return "";
+  const params = new URLSearchParams(hash);
+  const data = params.get("tgWebAppData");
+  return data ? decodeURIComponent(data) : "";
+};
+
 export const apiFetch = async <T>(input: RequestInfo, init?: RequestInit) => {
-  const initData = window.Telegram?.WebApp?.initData;
+  const initData = getInitData();
   const headers = {
     "Content-Type": "application/json",
     ...(init?.headers ?? {}),
