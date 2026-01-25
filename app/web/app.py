@@ -24,8 +24,26 @@ app.add_middleware(
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(BASE_DIR)))
-DIST_DIR = os.path.join(ROOT_DIR, "web", "dist")
+
+
+def _resolve_web_root() -> str:
+    candidates = [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(BASE_DIR))), "web"),
+        os.path.join(os.path.dirname(os.path.dirname(BASE_DIR)), "web"),
+        os.path.join(os.path.dirname(BASE_DIR), "web"),
+        "/app/web",
+        "/web",
+    ]
+    for path in candidates:
+        if os.path.exists(os.path.join(path, "dist", "index.html")):
+            return path
+        if os.path.exists(os.path.join(path, "index.html")):
+            return path
+    return os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(BASE_DIR))), "web")
+
+
+WEB_ROOT = _resolve_web_root()
+DIST_DIR = os.path.join(WEB_ROOT, "dist")
 ASSETS_DIR = os.path.join(DIST_DIR, "assets")
 INDEX_PATH = os.path.join(DIST_DIR, "index.html")
 
@@ -46,7 +64,10 @@ async def startup_event():
 def root():
     if os.path.exists(INDEX_PATH):
         return FileResponse(INDEX_PATH)
-    return FileResponse(os.path.join(ROOT_DIR, "web", "index.html"))
+    fallback = os.path.join(WEB_ROOT, "index.html")
+    if os.path.exists(fallback):
+        return FileResponse(fallback)
+    return {"status": "webapp_not_built"}
 
 
 @app.get("/api/health")
