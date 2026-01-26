@@ -7,68 +7,94 @@ export const useTelegram = () => {
   const [webApp, setWebApp] = useState<TelegramWebApp | null>(null);
 
   useEffect(() => {
-    const tg = window.Telegram?.WebApp;
-    if (!tg) return;
+    let intervalId: number | null = null;
+    let cancelled = false;
 
-    const applyTheme = () => {
-      const theme = tg.themeParams || {};
-      const root = document.documentElement.style;
-      root.setProperty("--tg-bg-color", getThemeValue(theme, "bg_color", "#f5f5f5"));
-      root.setProperty("--tg-text-color", getThemeValue(theme, "text_color", "#111111"));
-      root.setProperty(
-        "--tg-hint-color",
-        getThemeValue(theme, "hint_color", "#8a8a8a"),
-      );
-      root.setProperty(
-        "--tg-link-color",
-        getThemeValue(theme, "link_color", "#2f80ed"),
-      );
-      root.setProperty(
-        "--tg-button-color",
-        getThemeValue(theme, "button_color", "#2f80ed"),
-      );
-      root.setProperty(
-        "--tg-button-text-color",
-        getThemeValue(theme, "button_text_color", "#ffffff"),
-      );
-      root.setProperty(
-        "--tg-secondary-bg-color",
-        getThemeValue(theme, "secondary_bg_color", "#ffffff"),
-      );
+    const init = (tg: TelegramWebApp) => {
+      const applyTheme = () => {
+        const theme = tg.themeParams || {};
+        const root = document.documentElement.style;
+        root.setProperty("--tg-bg-color", getThemeValue(theme, "bg_color", "#f5f5f5"));
+        root.setProperty("--tg-text-color", getThemeValue(theme, "text_color", "#111111"));
+        root.setProperty(
+          "--tg-hint-color",
+          getThemeValue(theme, "hint_color", "#8a8a8a"),
+        );
+        root.setProperty(
+          "--tg-link-color",
+          getThemeValue(theme, "link_color", "#2f80ed"),
+        );
+        root.setProperty(
+          "--tg-button-color",
+          getThemeValue(theme, "button_color", "#2f80ed"),
+        );
+        root.setProperty(
+          "--tg-button-text-color",
+          getThemeValue(theme, "button_text_color", "#ffffff"),
+        );
+        root.setProperty(
+          "--tg-secondary-bg-color",
+          getThemeValue(theme, "secondary_bg_color", "#ffffff"),
+        );
+      };
+
+      const applySafeArea = () => {
+        const inset = tg.safeAreaInset ?? tg.contentSafeAreaInset;
+        if (!inset) return;
+        const root = document.documentElement.style;
+        root.setProperty("--safe-area-top", `${inset.top}px`);
+        root.setProperty("--safe-area-bottom", `${inset.bottom}px`);
+        root.setProperty("--safe-area-left", `${inset.left}px`);
+        root.setProperty("--safe-area-right", `${inset.right}px`);
+      };
+
+      const applyViewportHeight = () => {
+        const root = document.documentElement.style;
+        const height = window.visualViewport?.height ?? window.innerHeight;
+        root.setProperty("--viewport-height", `${height}px`);
+      };
+
+      tg.ready();
+      tg.expand();
+      applyTheme();
+      applySafeArea();
+      applyViewportHeight();
+      tg.onEvent("themeChanged", applyTheme);
+      tg.onEvent("viewportChanged", applySafeArea);
+      tg.onEvent("viewportChanged", applyViewportHeight);
+      window.visualViewport?.addEventListener("resize", applyViewportHeight);
+      setWebApp(tg);
+
+      return () => {
+        tg.offEvent("themeChanged", applyTheme);
+        tg.offEvent("viewportChanged", applySafeArea);
+        tg.offEvent("viewportChanged", applyViewportHeight);
+        window.visualViewport?.removeEventListener("resize", applyViewportHeight);
+      };
     };
 
-    const applySafeArea = () => {
-      const inset = tg.safeAreaInset ?? tg.contentSafeAreaInset;
-      if (!inset) return;
-      const root = document.documentElement.style;
-      root.setProperty("--safe-area-top", `${inset.top}px`);
-      root.setProperty("--safe-area-bottom", `${inset.bottom}px`);
-      root.setProperty("--safe-area-left", `${inset.left}px`);
-      root.setProperty("--safe-area-right", `${inset.right}px`);
+    let cleanup: (() => void) | null = null;
+    const tryInit = () => {
+      const tg = window.Telegram?.WebApp;
+      if (!tg || cancelled) return false;
+      cleanup = init(tg);
+      return true;
     };
 
-    const applyViewportHeight = () => {
-      const root = document.documentElement.style;
-      const height = window.visualViewport?.height ?? window.innerHeight;
-      root.setProperty("--viewport-height", `${height}px`);
-    };
-
-    tg.ready();
-    tg.expand();
-    applyTheme();
-    applySafeArea();
-    applyViewportHeight();
-    tg.onEvent("themeChanged", applyTheme);
-    tg.onEvent("viewportChanged", applySafeArea);
-    tg.onEvent("viewportChanged", applyViewportHeight);
-    window.visualViewport?.addEventListener("resize", applyViewportHeight);
-    setWebApp(tg);
+    if (!tryInit()) {
+      let attempts = 0;
+      intervalId = window.setInterval(() => {
+        attempts += 1;
+        if (tryInit() || attempts >= 50) {
+          if (intervalId) window.clearInterval(intervalId);
+        }
+      }, 100);
+    }
 
     return () => {
-      tg.offEvent("themeChanged", applyTheme);
-      tg.offEvent("viewportChanged", applySafeArea);
-      tg.offEvent("viewportChanged", applyViewportHeight);
-      window.visualViewport?.removeEventListener("resize", applyViewportHeight);
+      cancelled = true;
+      if (intervalId) window.clearInterval(intervalId);
+      cleanup?.();
     };
   }, []);
 
