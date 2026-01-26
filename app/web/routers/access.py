@@ -51,11 +51,10 @@ async def access_status(x_telegram_init_data: str | None = Header(default=None))
     finally:
         await session.close()
 
-    logger.info(
-        "access status: tg_id=%s username=%s is_admin=%s access=%s",
-        tg_id,
-        username,
-        is_admin,
-        access,
+    message = (
+        f"access status: tg_id={tg_id} username={username} "
+        f"is_admin={is_admin} access={access}"
     )
+    logger.info(message)
+    print(message, flush=True)
     return {"access": access, "is_admin": is_admin}
