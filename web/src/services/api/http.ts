@@ -14,7 +14,7 @@ export const getInitData = () => {
   if (!hash) return "";
   const params = new URLSearchParams(hash);
   const data = params.get("tgWebAppData");
-  return data ? decodeURIComponent(data) : "";
+  return data || "";
 };
 
 export const apiFetch = async <T>(input: RequestInfo, init?: RequestInit) => {
