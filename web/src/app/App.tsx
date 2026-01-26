@@ -44,6 +44,14 @@ const App = () => {
     let attempts = 0;
     const maxAttempts = 50;
     let inFlight = false;
+    let timerId: number | null = null;
+
+    const stopTimer = () => {
+      if (timerId) {
+        window.clearInterval(timerId);
+        timerId = null;
+      }
+    };
 
     const tryAccess = async () => {
       if (inFlight || cancelled) return;
@@ -51,6 +59,7 @@ const App = () => {
       try {
         await getAccessStatus();
         if (!cancelled) setAccessState("granted");
+        stopTimer();
       } catch (error) {
         if (cancelled) return;
         if (error instanceof ApiError) {
@@ -64,20 +73,23 @@ const App = () => {
           }
           if (error.status === 401 || error.status === 403) {
             setAccessState("denied");
+            stopTimer();
             return;
           }
         } else {
           setAccessError(error instanceof Error ? error.message : String(error));
           setAccessState("denied");
+          stopTimer();
           return;
         }
         setAccessState("denied");
+        stopTimer();
       } finally {
         inFlight = false;
       }
     };
 
-    const timer = window.setInterval(() => {
+    timerId = window.setInterval(() => {
       attempts += 1;
       const hasInitData = Boolean(getInitData());
       if (hasInitData || debugEnabled) {
@@ -87,13 +99,13 @@ const App = () => {
         }
       }
       if (attempts >= maxAttempts) {
-        window.clearInterval(timer);
+        stopTimer();
         if (!cancelled) setAccessState("no_init");
       }
     }, 150);
     return () => {
       cancelled = true;
-      window.clearInterval(timer);
+      stopTimer();
     };
   }, [debugEnabled, webApp]);
 
