@@ -43,38 +43,59 @@ const App = () => {
     let cancelled = false;
     let attempts = 0;
     const maxAttempts = 50;
+    let inFlight = false;
+
+    const tryAccess = async () => {
+      if (inFlight || cancelled) return;
+      inFlight = true;
+      try {
+        await getAccessStatus();
+        if (!cancelled) setAccessState("granted");
+      } catch (error) {
+        if (cancelled) return;
+        if (error instanceof ApiError) {
+          setAccessError(error.message);
+          const message = error.message.toLowerCase();
+          if (
+            error.status === 401 &&
+            (message.includes("missing init data") || message.includes("hash missing"))
+          ) {
+            return;
+          }
+          if (error.status === 401 || error.status === 403) {
+            setAccessState("denied");
+            return;
+          }
+        } else {
+          setAccessError(error instanceof Error ? error.message : String(error));
+          setAccessState("denied");
+          return;
+        }
+        setAccessState("denied");
+      } finally {
+        inFlight = false;
+      }
+    };
+
     const timer = window.setInterval(() => {
       attempts += 1;
-      const hasInitData =
-        Boolean(webApp?.initData) || window.location.hash.includes("tgWebAppData=");
-      if (hasInitData) {
-        window.clearInterval(timer);
-        getAccessStatus()
-          .then(() => {
-            if (!cancelled) setAccessState("granted");
-          })
-          .catch((error) => {
-            if (cancelled) return;
-            if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-              setAccessError(error.message);
-              setAccessState("denied");
-              return;
-            }
-            setAccessError(error instanceof Error ? error.message : String(error));
-            setAccessState("denied");
-          });
-        return;
+      const hasInitData = Boolean(getInitData());
+      if (hasInitData || debugEnabled) {
+        tryAccess();
+        if (hasInitData) {
+          return;
+        }
       }
       if (attempts >= maxAttempts) {
         window.clearInterval(timer);
         if (!cancelled) setAccessState("no_init");
       }
-    }, 100);
+    }, 150);
     return () => {
       cancelled = true;
       window.clearInterval(timer);
     };
-  }, [webApp]);
+  }, [debugEnabled, webApp]);
 
   if (accessState !== "granted") {
     const initData = getInitData();
