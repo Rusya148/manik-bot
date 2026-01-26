@@ -1,4 +1,5 @@
 import json
+import logging
 
 from fastapi import APIRouter, Header, HTTPException
 
@@ -9,6 +10,7 @@ from app.utils.telegram import verify_init_data
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.get("/access")
@@ -49,4 +51,11 @@ async def access_status(x_telegram_init_data: str | None = Header(default=None))
     finally:
         await session.close()
 
+    logger.info(
+        "access status: tg_id=%s username=%s is_admin=%s access=%s",
+        tg_id,
+        username,
+        is_admin,
+        access,
+    )
     return {"access": access, "is_admin": is_admin}
