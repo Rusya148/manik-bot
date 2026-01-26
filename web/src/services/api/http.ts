@@ -7,7 +7,7 @@ export class ApiError extends Error {
   }
 }
 
-const getInitData = () => {
+export const getInitData = () => {
   const direct = window.Telegram?.WebApp?.initData;
   if (direct) return direct;
   const hash = window.location.hash?.replace(/^#/, "");

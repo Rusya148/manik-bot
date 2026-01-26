@@ -7,7 +7,7 @@ import ScheduleScreen from "@/screens/ScheduleScreen";
 import ClientsScreen from "@/screens/ClientsScreen";
 import SettingsScreen from "@/screens/SettingsScreen";
 import BookingSheet from "@/features/booking/BookingSheet";
-import { ApiError } from "@/services/api/http";
+import { ApiError, getInitData } from "@/services/api/http";
 import { getAccessStatus } from "@/services/api/access";
 
 const App = () => {
@@ -21,6 +21,12 @@ const App = () => {
   const [accessState, setAccessState] = useState<
     "loading" | "granted" | "denied" | "no_init"
   >("loading");
+  const [accessError, setAccessError] = useState<string | null>(null);
+  const [debugEnabled] = useState(
+    () =>
+      window.location.search.includes("debug=1") ||
+      window.location.hash.includes("debug=1"),
+  );
 
   useEffect(() => {
     const handler = (event: Event) => {
@@ -50,9 +56,11 @@ const App = () => {
           .catch((error) => {
             if (cancelled) return;
             if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
+              setAccessError(error.message);
               setAccessState("denied");
               return;
             }
+            setAccessError(error instanceof Error ? error.message : String(error));
             setAccessState("denied");
           });
         return;
@@ -69,6 +77,28 @@ const App = () => {
   }, [webApp]);
 
   if (accessState !== "granted") {
+    const initData = getInitData();
+    const initDataPreview =
+      initData && initData.length > 120
+        ? `${initData.slice(0, 120)}…`
+        : initData || "—";
+    const copyInitData = () => {
+      if (!initData) {
+        setToast("initData пуст");
+        return;
+      }
+      const doToast = () => setToast("initData скопирован");
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard
+          .writeText(initData)
+          .then(doToast)
+          .catch(() => {
+            window.prompt("initData", initData);
+          });
+        return;
+      }
+      window.prompt("initData", initData);
+    };
     return (
       <div className="app-shell flex h-[var(--viewport-height)] items-center justify-center px-6 text-center">
         <div className="space-y-3">
@@ -86,6 +116,25 @@ const App = () => {
                 ? "Откройте через кнопку WebApp в боте"
                 : "Попросите администратора выдать доступ"}
           </div>
+          {accessError && (
+            <div className="text-xs text-[color:#d9534f]">{accessError}</div>
+          )}
+          {debugEnabled && (
+            <div className="space-y-2 rounded-2xl bg-[color:var(--app-card)] px-4 py-3 text-left text-xs text-hint">
+              <div>
+                Telegram.WebApp: {window.Telegram?.WebApp ? "есть" : "нет"}
+              </div>
+              <div>initData длина: {initData.length || 0}</div>
+              <div className="break-all">initData: {initDataPreview}</div>
+              <button
+                type="button"
+                className="mt-2 w-full rounded-xl bg-[color:var(--app-bg)] px-3 py-2 text-xs text-accent"
+                onClick={copyInitData}
+              >
+                Скопировать initData
+              </button>
+            </div>
+          )}
         </div>
       </div>
     );

@@ -1,12 +1,4 @@
-from aiogram.types import (
-    InlineKeyboardButton,
-    InlineKeyboardMarkup,
-    KeyboardButton,
-    ReplyKeyboardMarkup,
-    WebAppInfo,
-)
-
-from app.config import settings
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 import calendar
 from datetime import date
 
@@ -15,8 +7,6 @@ _kb_start_rows = [
     [KeyboardButton(text="Записать клиента"), KeyboardButton(text="Удалить клиента"), KeyboardButton(text="Клиенты")],
     [KeyboardButton(text="Календарь"), KeyboardButton(text="Расписание")],
 ]
-if settings.webapp_url:
-    _kb_start_rows.append([KeyboardButton(text="Веб-версия", web_app=WebAppInfo(url=settings.webapp_url))])
 
 kb_start = ReplyKeyboardMarkup(_kb_start_rows, resize_keyboard=True)
 
